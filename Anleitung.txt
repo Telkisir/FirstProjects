@@ -1,0 +1,4 @@
+im Anhang liegt eine .zip-Datei, die das Python-Skript und eine Textdatei, die das Skript als Eingabe benoetigt.
+Starten kannst du das Programm ueber die Windows-Eingabeaufforderung (Konsole) folgendermassen:
+(1) Mit "cd <Verzeichnis>" in das Verzeichnis wechseln, welches die beiden Dateien enthaelt.
+(2) Aufruf mit: "python <Dateiname-mit-Dateiendung> <Parameter> , d.h. in dem Fall hier: "python Maze.py example0.in"
