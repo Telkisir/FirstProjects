@@ -17,6 +17,13 @@ Operator	Meaning
 <=	Less than or equal to
 >=	Greater than or equal to
 
+Escape character
+Single quote  \'
+Double quote \"
+Tab \t
+Newline (line break) \n
+Backslash \\
+
 Boolean operator order: first not, than and. At last or
 While Schleife:  mit continue sprung an den Anfang
 
@@ -37,6 +44,13 @@ Hint for tuple with only one entry:
 <class 'tuple'>
 >>> type(('hello'))
 <class 'str'>
+
+Dictionary
+In code, a dictionary is typed with braces, {}. Dictionaries can still use integer values as keys, just like lists use integers for indexes, but they do not have to start at 0 and can be any number.
+
+Bei forschleifen kann mittels dictionary.items() auf das Paar key, value oder per zweier variablen auf beide separat zugegriffen werden
+for i (k, v) in spam.items():
+
 
 
 
