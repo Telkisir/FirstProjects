@@ -4,7 +4,7 @@ Created on Fri Nov 11 18:30:50 2016
 
 @author: Telkisir
 """
-import pprint
+import pprint, re
 #Sotieren per Hand
 def SortArray(): # Laufzeit n/2 * (n+1)
 
@@ -85,5 +85,10 @@ def printBrought():
     
 #main
 
-ch5_print()
+
+message = 'Call me at 415-555-1011 tomorrow. 415-555-9999 is my office.'
+phoneNumRegex = re.compile(r'\d\d\d-\d\d\d-\d\d\d\d')
+mo = phoneNumRegex.search('My number is 415-555-4242.')
+print('Phone number found: ' + mo.group())
+
 
