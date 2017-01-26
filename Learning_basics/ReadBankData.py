@@ -7,67 +7,43 @@ Program should read in exportes Data from IngDiba for book keeping
 """
 
 
-import os, re, pandas as pd
+import fnmatch, os, re, pandas as pd
 from Dictonary_Oberstruktur import getFilterBankVerw, getFilterBankAuftrag
 import pickle
-strKassenbuch = 'Bankzahlungen.csv'
+from Pathnames import getFileName
 
-def CollectBankData(strKassenbuch, Status):
+
+
+def CollectBankData( Status):
 #Lese alle csv dateien ein...
+    strKassenbuch, path, fileBank = getFileName()
     if Status == False: 
-        df = pickle.load(open('BankData.p', 'rb'))
-    else:
-        csvDic = getCSVDataList(strKassenbuch)
-        df = getData(csvDic[0], ';') # später verbessern
-        df = convFloat(df, ['Saldo','Betrag']) # mache aus 2.500,00 --> 2500.00
-        df = convDate(df,['Buchung','Valuta']) # mache aus String --> date
-        df = df.drop(df.columns[[1,6,8]], axis=1) # lösche Währung und Valuta
-        df = convCategories(df, [3,1] ) #3= Verwendungszweck , 1 =Empfänger
-        List = df.loc[df['Oberstruktur'] =='KEINE'].index 
-        print (List)
-        df.ix[List,6]='REST'
-        df['Zahlungsart'] = pd.Series('Bank', index=df.index)
-        
-        pickle.dump(df,open('BankData.p', "wb"))
+        df = pickle.load(open(os.path.join(path,fileBank ), 'rb'))
+    else:       
+        print ('Daten werden neu eingeladen...')
+        csvDic = fnmatch.filter(os.listdir(path),'Umsatzanzeige_*.csv')
+        for inum, ind in enumerate(csvDic):
+            if inum == 0:
+                df = subCollect(ind)
+            else:
+                df = df.append(subCollect(ind))   
+        df = df.drop_duplicates()
+        pickle.dump(df,open(os.path.join(path, fileBank), "wb"))
     
-    #df = MergeBank(df, strKassenbuch)    
-    #df[~(df['regiment'] == 'Dragoons')] #auswahl direkt in C
+    print('Bankdaten sind geladen')
     return df
-def getCSVDataList(strKassenbuch):
-#Get FileNames von mögichen csv Datein im Ordner
-#Momentan nur 'Umsatzanzeige_5416578386_20170110.csv'
-    #filePattern_small = re.compile(r'Umsatzanzeige_(\d+).(\d+)\.csv')
-    filePattern = re.compile(r'''(^Umsatzanzeige_
-                             (\d+).         #Kontonummer
-                             (\d+)          #bis einschließelich Datum
-                             \.csv
-                             )''', re.VERBOSE)
-    csvFiles = []
-    for filename in os.listdir():
-        match = filePattern.search(filename)
-        if match != None:
-            csvFiles.append(filename)
-    csvInfo = getOrder(csvFiles, strKassenbuch) #weiter ausdünnen, sowie modifikation
-    return csvInfo 
 
-def getOrder(csvFiles, strKassenbuch):
-#Reduziere Liste auf neue Daten im Vergleich zu bestehendem Kassenbuch und fügt weitere informationen neben Namen hinzu
-    #Order the csv Files after IBAN and Datumsangaben
-# Welche Datein müssen neu eingelesen werden
-# Liste neben Namen auch Information zu Datenafang, skiprow, IBAN und ggf, Datum
-    print ('Under construction...')
-    return csvFiles
-    
-
-def getData(csvDic, sepSign):        
-# Gibt es eine bereits erstellte datenbank?
-# Nur 
-    skiprow = 7 #!!! später verbessern bereits in getOrder
-    df = pd.read_csv(csvDic, skiprows= skiprow, sep=sepSign, header =0, encoding='iso-8859-15' )
+def subCollect(ind):
+    df = pd.read_csv(os.path.join(path, ind), skiprows=  7, sep=';', header =0, encoding='iso-8859-15' ) # später 0 auf variabel
+    df = convFloat(df, ['Saldo','Betrag']) # mache aus 2.500,00 --> 2500.00
+    df = convDate(df,['Buchung','Valuta']) # mache aus String --> date
+    df = df.drop(df.columns[[1,6,8]], axis=1) # lösche Währung und Valuta
+    df = convCategories(df, [3,1] ) #3= Verwendungszweck , 1 =Empfänger
+    List = df.loc[df['Oberstruktur'] =='KEINE'].index 
+    #print (List)
+    df.ix[List,6]='REST'
+    df['Zahlungsart'] = pd.Series('Bank', index=df.index)
     return df
-#Zahlenwerte korrigieren
-    #Wie steuere ich ein Dataframe an?
-        #df2 = df.loc[:,['Buchung']]
 
 def convFloat(df, column):
     for colName in column:
@@ -138,19 +114,15 @@ def searchReplace(df, listIndex, Kategorie):
     return df
 
 
-def MergeBank(df, inital):
-#Füge initial und df zusammen
-    return df
 
-def MergeBandWa(df):
-    #führt Handausgaben mit Banküberweisungen zusammen
-    return df
 ########################################
 #############..MAIN..###################
 ########################################
-print ('Bankdaten werden eingeladen...')
-df = CollectBankData(strKassenbuch, False)
 
+def initiateBank():
+    print ('Bankdaten werden eingeladen...')
+    df = CollectBankData(True)
+    return df
 #Eingabe von Kassenzetteln (GUI!!!)
 
 #df = MergeBandWa(df)
