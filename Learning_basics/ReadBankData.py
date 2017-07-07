@@ -5,12 +5,23 @@ Created on Tue Jan 10 14:06:17 2017
 @author: K. Biß
 Program should read in exportes Data from IngDiba for book keeping
 """
-
+#To dO:
+#Unterstruktur fehlen noch
+#Überschreibungen nicht als print sondern in txt ablegen
+'''
+Aktuelle Arbeit:
+    db drei fehlende Einträge löschen manuall neue Total 0126 anlegen
+    fitl für Januar erweitern
+    ...Untersektoren anlegen
+    Index homogenisieren . duplicate funktioniert noch?
+    update im test modus (filter anüpassen nicht abspeichern)
+'''
 
 import fnmatch, os, re, pandas as pd
 from Dictonary_Oberstruktur import getFilterBankVerw, getFilterBankAuftrag
 import pickle
-from Pathnames import getFileName
+from Pathnames import getFileName, getDataPyth, getTimeStamp, dumpData
+import numpy as np
 
 
 
@@ -24,24 +35,33 @@ def CollectBankData( Status):
         csvDic = fnmatch.filter(os.listdir(path),'Umsatzanzeige_*.csv')
         for inum, ind in enumerate(csvDic):
             if inum == 0:
-                df = subCollect(ind)
+                df = subCollect(ind, path)
             else:
-                df = df.append(subCollect(ind))   
-        df = df.drop_duplicates()
-        pickle.dump(df,open(os.path.join(path, fileBank), "wb"))
-    
+                df = df.append(subCollect(ind, path))   
+        df = sortDate(df)
+        #pickle.dump(df,open(os.path.join(path, fileBank), "wb"))
+        dumpData(df)
+        #tdate = getTimeStamp() #format date
+        #pickle.dump(df,open(os.path.join(path, 'TotalData_%s%s%s.p'%(tdate.year,tdate.strftime('%m'), tdate.strftime('%d'))), "wb"))
     print('Bankdaten sind geladen')
     return df
 
-def subCollect(ind):
-    df = pd.read_csv(os.path.join(path, ind), skiprows=  7, sep=';', header =0, encoding='iso-8859-15' ) # später 0 auf variabel
+def subCollect(ind, pathtoData):
+    if int((ind.split('_'))[2].split('.csv')[0]) > 20170200:
+        numrows = 6
+    else:
+        numrows = 7
+    df = pd.read_csv(os.path.join(pathtoData, ind), skiprows=  numrows, sep=';', header =0, encoding='iso-8859-15' ) # später 0 auf variabel
+    #df = pd.read_csv(os.path.join(path, csvDic[0]), skiprows=  7, sep=';', header =0, encoding='iso-8859-15' )
+    #df['Buchung'] = pd.to_datetime(df['Buchung'], yearfirst = True, format='%d.%m.%Y').dt.date
+    #df.loc[:,'Valuta'] = pd.to_datetime(df.loc[:,'Valuta']).dt.date
     df = convFloat(df, ['Saldo','Betrag']) # mache aus 2.500,00 --> 2500.00
     df = convDate(df,['Buchung','Valuta']) # mache aus String --> date
     df = df.drop(df.columns[[1,6,8]], axis=1) # lösche Währung und Valuta
     df = convCategories(df, [3,1] ) #3= Verwendungszweck , 1 =Empfänger
     List = df.loc[df['Oberstruktur'] =='KEINE'].index 
     #print (List)
-    df.ix[List,6]='REST'
+    df.ix[List,6]='REST' 
     df['Zahlungsart'] = pd.Series('Bank', index=df.index)
     return df
 
@@ -59,12 +79,15 @@ def convFloat(df, column):
 
 def convDate(df, column):
     for colName in column:
-        df.iloc[:][colName] = pd.to_datetime(df.iloc[:][colName]).dt.date
+        df[colName] = pd.to_datetime(df[colName], yearfirst = True, format='%d.%m.%Y').dt.date
     return df
 
 def convCategories(df, listIndex):
     #Oberklassen-Klassifikation per Buchungstext
-    df['Oberstruktur'] = pd.Series('KEINE', index=df.index)
+    if 'Oberstruktur' in df.columns:
+        print ('OK')    
+    else:
+        df['Oberstruktur'] = pd.Series('KEINE', index=df.index)
     df= searchReplace(df, listIndex, 'Oberstruktur')
     convRatioBank(df)    
     #Unterklassen-Klassifikation per Auftraggeber/Empfänger und Verwendungszweck    
@@ -82,6 +105,7 @@ def convRatioBank(df):
 
 
 def searchReplace(df, listIndex, Kategorie):
+    changeList = []
     for index1 in listIndex:
         if index1 == 1:
             listRegex = getFilterBankAuftrag()
@@ -105,12 +129,16 @@ def searchReplace(df, listIndex, Kategorie):
                             elif df.at[index2,Kategorie] =='KEINE':
                                 df.at[index2,Kategorie] = Begriff
                             else:
-                                if df.at[index2,Kategorie] != Begriff: 
+                                if df.at[index2,Kategorie] != Begriff:                                     
+                                    changeList = changeList.append('Eintrag bereits geändert in',df.at[index2,Kategorie] , 'ersetzt durch ', Begriff, ' in Zeile ', index2)
                                     print ('Eintrag bereits geändert in',df.at[index2,Kategorie] , 'ersetzt durch ', Begriff, ' in Zeile ', index2)
                                     df.at[index2,Kategorie] = Begriff                            #print (df.loc[index2][Kategorie], index2 , index1, df.iloc[index2][index1])                      
                     except TypeError:
                         # ('Kein Wert angegeben in Zeile ', index2 , index1)  # noch ändern  
                         df.ix[index2,index1] = "Eintrag fehlt"
+        if len(changeList) > 0:
+            pickle.dump(changeList,open(os.path.join('Hinweisprotokoll_'+getTimeStamp()+'.p'), "wb"))  
+            print ('Hinweise ausgeschrieben')
     return df
 
 
@@ -123,10 +151,37 @@ def initiateBank():
     print ('Bankdaten werden eingeladen...')
     df = CollectBankData(True)
     return df
-#Eingabe von Kassenzetteln (GUI!!!)
 
-#df = MergeBandWa(df)
+def updateBank(test):
+    df = getDataPyth()    
+    strKassenbuch, path, fileBank = getFileName()    
+    print ('Daten werden aktualisiert...')
+    csvDic = fnmatch.filter(os.listdir(path),'Umsatzanzeige_*.csv')
+    for inum, ind in enumerate(csvDic):
+        df = df.append(subCollect(ind, path))   
+    df = sortDate(df)
+    
+    if test == True:
+        dumpData(df)
+        #pickle.dump(df,open(os.path.join(path, 'TotalData_'+sTimeStamp+'.p'), "wb"))
+        #tdate = getTimeStamp()
+        #pickle.dump(df,open(os.path.join(path, 'TotalData_%s%s%s.p'%(tdate.year,tdate.month, tdate.day)), "wb"))
+    print('Bankdaten sind aktualisiert')
+    return df
 
+def ResetRest(df, overwrite):  
+    
+    if overwrite == True:
+        List = df.loc[df['Oberstruktur'] =='Rest'].index 
+        df.ix[List,6]='Sonstige' 
+    
+    return  df.loc[df['Oberstruktur'] == 'REST']   
+
+def sortDate(df):
+    df = df.sort_values('Buchung', axis = 0)
+    df = df.drop_duplicates()
+    df = df.set_index(np.arange(0, len(df)))    
+    return df
 #Auswertung
 #Monatsausgabe der Kategorien
 #Abgleich von theoretisch zu erfasstem wert und fixen
