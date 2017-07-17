@@ -45,7 +45,9 @@ def FindDuplicates():
     df = getDataPyth()
     delDf = df.drop( df.drop_duplicates().index) #funktioniert scheinbar mit dem Jahr nicht!
     df.drop_duplicates(inplace = True)
-    #TODO use subset for III
+    #Delete BAR duoubles
+    duplies = df.drop(df.drop_duplicates(keep= False, subset=['Buchung', 'Betrag', 'Oberstruktur','Verwendungszweck', 'Auftraggeber/Empfänger']).index)
+    df.drop(duplies.loc[duplies.Zahlungsart=='BAR'].index, inplace= True)
     duplies = df.drop(df.drop_duplicates(keep= False, subset=['Zahlungsart', 'Betrag', 'Oberstruktur','Verwendungszweck', 'Auftraggeber/Empfänger']).index)
     whitelist = ['Umbuchung  ', 'Miete Haendelstrasse 21 in  Kohlscheid  ',
        'Finanzierung A  ', 'Hochzeit  ',
@@ -69,6 +71,8 @@ def FindDuplicates():
                     #else: Abweichung vermutlich kein Eingabefehler
                 else:
                     print ('Für Betrag %f wurden beim Verwendungszweck %s mehr als zwei Dopplungen festgestellt',(indVal,indVer))
+
+    
     return delDf
 
 def getTimeStamp():
