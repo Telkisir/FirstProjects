@@ -5,6 +5,8 @@ __pycache__/
 
 # C extensions
 *.so
+#private Data
+Learning_basics/Data
 
 # Distribution / packaging
 .Python

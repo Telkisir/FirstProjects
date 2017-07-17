@@ -30,25 +30,24 @@ def readInValue():
 
 def savetoBase(value, datum, oName, desc, person):
     rowmax = len(df)
-    df.loc[rowmax+1] = np.nan
+    if VFID.get()== np.empty():
+        valInd = rowmax +1
+    else:
+        valInd = float(VFID.get())
+        print ('Wert wird ersetzt')
+    df.loc[valInd] = np.nan
     #tdate = datetime.datetime.strptime(datum,"%d.%m.%Y").date()
-    df.loc[rowmax+1, df.columns[0]] = pd.to_datetime(datum, yearfirst = True, format='%d.%m.%Y').date()
-    df.loc[rowmax+1, 'Oberstruktur'] = oName
-    df.loc[rowmax+1, 'Verwendungszweck'] = str(desc)
-    df.loc[rowmax+1, 'Betrag'] = float(value)
-    df.loc[rowmax+1, 'Zahlungsart'] = 'BAR'                
-    df.loc[rowmax+1, df.columns[1]] = person     
+    df.loc[valInd, df.columns[0]] = pd.to_datetime(datum, yearfirst = True, format='%d.%m.%Y').date()
+    df.loc[valInd, 'Oberstruktur'] = oName
+    df.loc[valInd, 'Verwendungszweck'] = str(desc)
+    df.loc[valInd, 'Betrag'] = float(value)
+    df.loc[valInd, 'Zahlungsart'] = 'BAR'                
+    df.loc[valInd, df.columns[1]] = person     
     print ('Eintrag eingetragen')
     dumpData(df)
     return df
 
-'''def FindDuplicates(df):
-    for i in np.arange(0,10):#df.index:
-        temp = df.loc[df.Betrag == df.loc[i, 'Betrag']]        
-        if len(temp)>1:
-            print (temp.loc[temp.Buchung == df.loc[i,'Buchung']])
-    return temp
-'''
+
 def DAU(value, da, sDesc):
     #Prüft ob Daten dem vorgesehenem Format entsprechen
 #    while True:
@@ -67,8 +66,19 @@ def DAU(value, da, sDesc):
     return OK
 
 def findIt():
-    print ('Noch nicht implementiert')
+    try: 
+        valID = float(VFID.get())
+        try: 
+            df.loc[valID, 'Betrag']
 
+        except KeyError:
+            print ('ID nicht bekannt')
+        VFdate.insert(0,df.loc[valID, df.columns[0]])
+        VFvalue.insert(0, df.loc[valID, 'Betrag'])
+        VFdesc.insert(0,df.loc[valID, 'Verwendungszweck']) 
+    except ValueError:
+        print ('Eingabe nicht korrekt, bitte prüfen.')
+        
 def printIt():    
     print ('Value is: %s'%sGroup.get())
     
@@ -83,16 +93,21 @@ def addSome():
     for choice in newchoice:
         dropGroup['menu'].add_command(label=choice, command=tk__._setit(sGroup, choice))
 
-def delID():  
+def clearArrays():  
     VFvalue.delete(0, 'end')
     VFdate.delete(0,'end')
     sGroup.set('')
     sUser.set('')
     VFdesc.delete(0,'end')
-    VFgroup.delete(0,'end')
-    print ('Felder gelöscht')
+    VFgroup.delete(0,'end')    
     VFID.delete(0,'end')
-    print ('Löschung noch nicht implementiert')    
+    print ('Felder gelöscht')    
+
+def delID(): 
+    print ('noch nicht implementiert')
+    
+def replaceID(): 
+    print ('noch nicht implementiert')
 
 if __name__ == '__main__' :
     te = '24.7.2017'
@@ -105,17 +120,21 @@ if __name__ == '__main__' :
     B = tk__.Button(ro, text ="Betrag einlesen", command = readInValue)
     B.place(x=100,y=180)
     #Save
-    B2 = tk__.Button(ro, text ="List Duplicates", command = FindDuplicates)
+    B2 = tk__.Button(ro, text ="Del Duplicates", command = FindDuplicates)
     B2.place(x=10,y=180)
     #Eintrag löschen
     Bfind = tk__.Button(ro, text ="Eintrag suchen", command = findIt)
     Bfind.place(x=200,y=180)
+    Bclear = tk__.Button(ro, text ="Felder löschen", command =clearArrays)
+    Bclear.place(x=250,y=250)
     Bdel = tk__.Button(ro, text ="Eintrag löschen", command =delID)
-    Bdel.place(x=200,y=250)
+    Bdel.place(x=x1,y=250)
+    Bchage = tk__.Button(ro, text ="Eintrag ändern", command =replaceID)
+    Bchage.place(x=x1+100,y=250)
     LID = tk__.Label(ro, text='ID:')
     VFID = tk__.Entry(ro, bd = 5) #Value Field
-    LID.place(x = 120, y= 220)
-    VFID.place(x =160, y= 220)
+    LID.place(x = x1, y= 220)
+    VFID.place(x =x1+40, y= 220)
     #Betrag  
     Lvalue = tk__.Label(ro, text='Betrag:')
     VFvalue = tk__.Entry(ro, bd = 5) #Value Field
