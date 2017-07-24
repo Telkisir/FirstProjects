@@ -66,13 +66,16 @@ def DAU(value, da, sDesc):
     return OK
 
 def findIt():
+   
     try: 
         valID = float(VFID.get())
         try: 
             df.loc[valID, 'Betrag']
 
         except KeyError:
-            print ('ID nicht bekannt')
+            print ('ID %i nicht bekannt'%valID)
+        clearArrays()
+        VFID.insert(0,valID)
         VFdate.insert(0,df.loc[valID, df.columns[0]])
         VFvalue.insert(0, df.loc[valID, 'Betrag'])
         VFdesc.insert(0,df.loc[valID, 'Verwendungszweck']) 
@@ -104,37 +107,63 @@ def clearArrays():
     print ('Felder gelöscht')    
 
 def delID(): 
-    print ('noch nicht implementiert')
+    try:         
+        valID = float(VFID.get())
+        df.drop(valID, inplace = True)
+        clearArrays()
+        dumpData(df)
+        VFID.insert(0,valID)
+    except ValueError:
+        print ('Eingabe nicht korrekt, bitte prüfen.')
+    #TODO eintrag aus DB löschen
     
 def replaceID(): 
-    print ('noch nicht implementiert')
+    #TODO einträg ändern 
+    count = 0
+    try:         
+        valID = float(VFID.get())
+        if VFvalue.get() != '':
+            df.loc[valID, 'Betrag'] = VFvalue.get()
+            count += 1
+        if sGroup.get():
+            df.loc[valID, 'Oberstruktur'] = sGroup.get()
+            count += 1
+        if VFdesc.get():
+            df.loc[valID, 'Verwendungszweck'] = VFdesc.get()
+            count += 1
+    except ValueError:
+        print ('Eingabe nicht korrekt, bitte prüfen.')
+    if count > 0:
+        print('ID %i geändert'%valID)
+        dumpData(df)
+
 
 if __name__ == '__main__' :
     te = '24.7.2017'
     ro = tk__.Tk()
     df = getDataPyth()    
     #Layout
-    ro.geometry("400x300")
+    ro.geometry("440x350")
     x1 = 5
     x2 = 85
     B = tk__.Button(ro, text ="Betrag einlesen", command = readInValue)
-    B.place(x=100,y=180)
+    B.place(x=100,y=220)
     #Save
     B2 = tk__.Button(ro, text ="Del Duplicates", command = FindDuplicates)
-    B2.place(x=10,y=180)
+    B2.place(x=10,y=220)
     #Eintrag löschen
     Bfind = tk__.Button(ro, text ="Eintrag suchen", command = findIt)
-    Bfind.place(x=200,y=180)
+    Bfind.place(x=200,y=220)
     Bclear = tk__.Button(ro, text ="Felder löschen", command =clearArrays)
-    Bclear.place(x=250,y=250)
+    Bclear.place(x=250,y=300)
     Bdel = tk__.Button(ro, text ="Eintrag löschen", command =delID)
-    Bdel.place(x=x1,y=250)
+    Bdel.place(x=x1,y=300)
     Bchage = tk__.Button(ro, text ="Eintrag ändern", command =replaceID)
-    Bchage.place(x=x1+100,y=250)
+    Bchage.place(x=x1+100,y=300)
     LID = tk__.Label(ro, text='ID:')
     VFID = tk__.Entry(ro, bd = 5) #Value Field
-    LID.place(x = x1, y= 220)
-    VFID.place(x =x1+40, y= 220)
+    LID.place(x = x1, y= 250)
+    VFID.place(x =x1+40, y= 250)
     #Betrag  
     Lvalue = tk__.Label(ro, text='Betrag:')
     VFvalue = tk__.Entry(ro, bd = 5) #Value Field
@@ -152,24 +181,24 @@ if __name__ == '__main__' :
     sGroup = tk__.StringVar()
     dropGroup = tk__.OptionMenu(ro,sGroup,*lst1)
     dropGroup.place( x = x2, y = 85)   
-    B3 = tk__.Button(ro, text ="Gruppe hinzufügen", command = addSome)
-    B3.place(x= x2  + 140 ,y= 110)  
+    B_addgroup = tk__.Button(ro, text ="Gruppe hinzufügen", command = addSome)
+    B_addgroup.place(x= x2  + 150 ,y= 33)  
     L32 = tk__.Label(ro, text='Gruppe erweitern mit:')
     L32.place(x =x2 + 140, y= 60)
     VFgroup = tk__.Entry(ro, bd = 5) #Value Field
     VFgroup.place(x =x2 + 140, y= 85)
     #Genaue Beschreibung
-    L4 = tk__.Label(ro, text='Beschreibung:')
-    VFdesc = tk__.Entry(ro, bd = 5) #Value Field
+    L4 = tk__.Label(ro, text='Beschreibung:' )
+    VFdesc = tk__.Entry(ro, bd = 5, width = 50) #Value Field
     L4.place(x =x1, y= 110)
     VFdesc.place(x =x2, y= 110)
     #Zahler
     L5 = tk__.Label(ro, text='Person:')
-    L5.place(x =x1, y= 140)
+    L5.place(x =x1, y= 180)
     lst2 = ['Klaus', 'Gina']
     sUser = tk__.StringVar()
     dropUser = tk__.OptionMenu(ro,sUser,*lst2)
-    dropUser.place( x = x2, y = 140)         
+    dropUser.place( x = x2, y = 180)         
     ro.mainloop()
 
 
