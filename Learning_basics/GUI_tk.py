@@ -13,6 +13,7 @@ Created on Mon Jan 23 21:05:39 2017
 import tkinter as tk__
 import numpy as np
 from Pathnames import getDataPyth, dumpData, FindDuplicates
+from ReadBankData import CollectBankData
 import pandas as pd
 
 def readInValue():
@@ -66,22 +67,32 @@ def DAU(value, da, sDesc):
     return OK
 
 def findIt():
-   
-    try: 
-        valID = float(VFID.get())
-        try: 
-            df.loc[valID, 'Betrag']
-
-        except KeyError:
-            print ('ID %i nicht bekannt'%valID)
+    if checkID():
+        valID = int(VFID.get()) 
         clearArrays()
         VFID.insert(0,valID)
         VFdate.insert(0,df.loc[valID, df.columns[0]])
         VFvalue.insert(0, df.loc[valID, 'Betrag'])
         VFdesc.insert(0,df.loc[valID, 'Verwendungszweck']) 
+
+ 
+def checkID():
+    try:    
+        if float(VFID.get()).is_integer():
+            valID = int(VFID.get())
+            try: 
+                df.loc[valID, 'Betrag']
+                return True
+            except KeyError:
+                print ('ID %i nicht bekannt'%valID)
+                return  False
+        else:
+            print ('ID ist kein integer. Eingabe prüfen.')
+            return  False 
     except ValueError:
         print ('Eingabe nicht korrekt, bitte prüfen.')
-        
+        return False
+       
 def printIt():    
     print ('Value is: %s'%sGroup.get())
     
@@ -104,24 +115,22 @@ def clearArrays():
     VFdesc.delete(0,'end')
     VFgroup.delete(0,'end')    
     VFID.delete(0,'end')
-    print ('Felder gelöscht')    
+    
 
 def delID(): 
-    try:         
-        valID = float(VFID.get())
+    if checkID():
+        valID = int(VFID.get()) 
         df.drop(valID, inplace = True)
         clearArrays()
         dumpData(df)
         VFID.insert(0,valID)
-    except ValueError:
-        print ('Eingabe nicht korrekt, bitte prüfen.')
-    #TODO eintrag aus DB löschen
+    
     
 def replaceID(): 
     #TODO einträg ändern 
     count = 0
-    try:         
-        valID = float(VFID.get())
+    if checkID():       
+        valID = int(VFID.get()) 
         if VFvalue.get() != '':
             df.loc[valID, 'Betrag'] = VFvalue.get()
             count += 1
@@ -131,19 +140,21 @@ def replaceID():
         if VFdesc.get():
             df.loc[valID, 'Verwendungszweck'] = VFdesc.get()
             count += 1
-    except ValueError:
-        print ('Eingabe nicht korrekt, bitte prüfen.')
     if count > 0:
         print('ID %i geändert'%valID)
         dumpData(df)
+    else:
+        print ('Keine Eingaben vorhanden')
 
+def Bank():
+    CollectBankData(True)
 
 if __name__ == '__main__' :
     te = '24.7.2017'
     ro = tk__.Tk()
     df = getDataPyth()    
     #Layout
-    ro.geometry("440x350")
+    ro.geometry("500x350")
     x1 = 5
     x2 = 85
     B = tk__.Button(ro, text ="Betrag einlesen", command = readInValue)
@@ -160,6 +171,8 @@ if __name__ == '__main__' :
     Bdel.place(x=x1,y=300)
     Bchage = tk__.Button(ro, text ="Eintrag ändern", command =replaceID)
     Bchage.place(x=x1+100,y=300)
+    B_Bank = tk__.Button(ro, text ="Bankdaten aktualisieren", command = Bank )
+    B_Bank.place(x= 350 ,y= 300) 
     LID = tk__.Label(ro, text='ID:')
     VFID = tk__.Entry(ro, bd = 5) #Value Field
     LID.place(x = x1, y= 250)
@@ -198,7 +211,8 @@ if __name__ == '__main__' :
     lst2 = ['Klaus', 'Gina']
     sUser = tk__.StringVar()
     dropUser = tk__.OptionMenu(ro,sUser,*lst2)
-    dropUser.place( x = x2, y = 180)         
+    dropUser.place( x = x2, y = 180)    
+ 
     ro.mainloop()
 
 

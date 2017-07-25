@@ -27,6 +27,7 @@ def getDataPyth():
             if temp > localPlace:
                 localPlace = temp    
     df = pickle.load(open(os.path.join(path, 'TotalData_'+str(localPlace)+'.p'), 'rb'))
+    df = df.astype({'Betrag': np.float, 'Saldo':np.float})
     return df
 
 
@@ -72,8 +73,8 @@ def FindDuplicates():
                 else:
                     print ('Für Betrag %f wurden beim Verwendungszweck %s mehr als zwei Dopplungen festgestellt',(indVal,indVer))
 
+    dumpData(df)
     
-    return delDf
 
 def getTimeStamp():
     '''import time
