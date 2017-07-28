@@ -18,18 +18,18 @@ Aktuelle Arbeit:
 '''
 
 import fnmatch, os, re, pandas as pd
-from Dictonary_Oberstruktur import getFilterBankVerw, getFilterBankAuftrag
+from Dictonary_Oberstruktur import getFilterBankVerw, getFilterBankAuftrag, getColName
 import pickle
 from Pathnames import getFileName, getDataPyth, getTimeStamp, dumpData
 import numpy as np
 
 
 
-def CollectBankData( Status):
+def CollectBankData( Status = False):
 #Lese alle csv dateien ein...
     strKassenbuch, path, fileBank = getFileName()
     if Status == False: 
-        df = pickle.load(open(os.path.join(path,fileBank ), 'rb'))
+        df = getDataPyth()
     else:       
         print ('Daten werden neu eingeladen...')
         csvDic = fnmatch.filter(os.listdir(path),'Umsatzanzeige_*.csv')
@@ -39,11 +39,27 @@ def CollectBankData( Status):
             else:
                 df = df.append(subCollect(ind, path))   
         df = sortDate(df)
+        df = setHardList(df)
         #pickle.dump(df,open(os.path.join(path, fileBank), "wb"))
         dumpData(df)
         #tdate = getTimeStamp() #format date
         #pickle.dump(df,open(os.path.join(path, 'TotalData_%s%s%s.p'%(tdate.year,tdate.strftime('%m'), tdate.strftime('%d'))), "wb"))
     print('Bankdaten sind geladen')
+    return df
+
+def setHardList(df):
+    path = os.path.join(os.getcwd(),'Data','Hardlist.xlsx' )
+    df_hard = pd.read_excel(path)
+    #df = getDataPyth()
+    
+    df = getColName(df)
+    df_hard = getColName(df_hard)
+    for ind in df_hard.index:
+        df.loc[(df.BText == df_hard.loc[ind, 'BText'])   & 
+              (df.Person == df_hard.loc[ind, 'Person']) &
+              (df.Zweck == df_hard.loc[ind, 'Zweck']) & 
+              (df.Betrag == df_hard.loc[ind, 'Betrag']) , 'Oberstruktur'] = df_hard.loc[ind, 'Oberstruktur']
+
     return df
 
 def subCollect(ind, pathtoData):
@@ -140,6 +156,7 @@ def searchReplace(df, listIndex, Kategorie):
             pickle.dump(changeList,open(os.path.join('Hinweisprotokoll_'+getTimeStamp()+'.p'), "wb"))  
             print ('Hinweise ausgeschrieben')
     return df
+
 
 
 

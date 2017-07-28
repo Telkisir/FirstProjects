@@ -21,7 +21,8 @@ def getFilterBankVerw():
     NBKRegex = re.compile(r'''(
             Strom | Stromio | Energieversorgung | #Strom
             simyo | telefon | Unitymedia | Prepaid |
-            Rundfunk | Mobilfunkrechnung|\d{14}-\d{8}
+            Rundfunk | Mobilfunkrechnung|\d{14}-\d{8}|
+            Nebenkostenabrechnung
             )''',re.IGNORECASE | re.VERBOSE)
     InsuranceRegex = re.compile(r'''(
             Hausrat | Versicherung | Reiseschutz|^WWK.
@@ -36,6 +37,7 @@ def getFilterBankVerw():
     SonstigRegex = re.compile(r'''(
             Elbenwald | NICI | #Geschenke  
             Ebay |^DM\sFIL|Saturn|Kerkrade
+            
             )''',re.IGNORECASE | re.VERBOSE)
     UmbuchungenRegex = re.compile(r'''(
             ^GA\sING | Hochzeit | Finanzierung
@@ -60,10 +62,10 @@ def getFilterBankVerw():
             Nunspeet
             )''',re.IGNORECASE | re.VERBOSE)  
     ArbeitRegex  = re.compile(r'''(
-            ^CCV\.Bastion\shotel
+            ^CCV\.Bastion\shotel| Reisekosten | Kassenzeichen | ^MOtel one Wien | ^Hotel Wartburg
             )''',re.IGNORECASE | re.VERBOSE)   
     HealthRegex = re.compile(r'''(
-            Malteser-Apotheke
+            Malteser-Apotheke | Fielmann
             )''',re.IGNORECASE | re.VERBOSE) 
     dicOberstruktur = {'Arbeit':ArbeitRegex, 'Gesundheit':HealthRegex, 'Urlaub':UrlaubRegex, 'Bienen': BeeRegex, 'Freizeit': FreeRegex, 'Diverses': DivRegex,'Kleidung': ClothRegex, 'Auto':AutoRegex,'Umbuchung': UmbuchungenRegex , 'Kaltmiete': KaltRegex, 'Nebenkosten': NBKRegex, 'Versicherung': InsuranceRegex, 'Essen': FoodRegex, 'Einnahmen': IncomeRegex, 'Sonstige':SonstigRegex}
     return dicOberstruktur
@@ -80,10 +82,10 @@ def getFilterBankAuftrag():
             )''',re.IGNORECASE | re.VERBOSE)  
     SonstigRegex = re.compile(r'''(
             REAL|^Yves|IKEA|^HIT|^Ann\sSayed|^Stadt\sH.\sRath|
-            ^Rossmann|^Easybuy
+            ^Rossmann|^Easybuy|^GARTENC\.CRUMBACH |^Bauhaus
             )''',re.IGNORECASE | re.VERBOSE)  
     HealthRegex = re.compile(r'''(
-            ^Zieten|Constanze\sSchneider
+            ^Zieten|Constanze\sSchneider|^Fielmann
             )''',re.IGNORECASE | re.VERBOSE)  
     TeleRegex  = re.compile(r'''(
             Sipgate|^1u1
@@ -117,3 +119,11 @@ def getFilterBankAuftrag():
             )''',re.IGNORECASE | re.VERBOSE)
     dicFilterBank2 = {'Umbuchung':UmbRegex,'Gesundheit':HealthRegex,'Vereine':VereinRegex, 'Hochzeit': WedRegex,'Bienen':BeeRegex ,'Kleidung':ClothRegex, 'Freizeit': FreeRegex, 'Spende': SpendeRegex, 'Arbeit': ArbeitRegex, 'Auto':AutoRegex, 'Sonstige': SonstigRegex, 'Nebenkosten': TeleRegex, 'Versicherung': InsRegex, 'Essen': FoodRegex}
     return dicFilterBank2
+
+def getColName(df):
+    df.rename(columns={
+       u'Auftraggeber/Empfänger':'Person',
+       u'Buchungstext': 'BText',
+       u'Verwendungszweck': 'Zweck'}, inplace = True)
+       
+    return df
