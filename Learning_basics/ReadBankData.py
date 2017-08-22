@@ -18,48 +18,61 @@ Aktuelle Arbeit:
 '''
 
 import fnmatch, os, re, pandas as pd
-from Dictonary_Oberstruktur import getFilterBankVerw, getFilterBankAuftrag, getColName
+from Dictonary_Oberstruktur import getFilterBankVerw, getFilterBankAuftrag
 import pickle
-from Pathnames import getFileName, getDataPyth, getTimeStamp, dumpData
+from Pathnames import getFileName, getDataPyth, getTimeStamp, dumpData, renColName, FindDuplicates
 import numpy as np
 
 
 
-def CollectBankData( Status = False):
+def UpdateBankData( Full = False):
 #Lese alle csv dateien ein...
-    strKassenbuch, path, fileBank = getFileName()
-    if Status == False: 
-        df = getDataPyth()
+    strKassenbuch, path, fileBank = getFileName()        
+    print ('Daten werden neu eingeladen...')
+    csvDic = fnmatch.filter(os.listdir(path),'Umsatzanzeige_*.csv')
+    df = getDataPyth()
+    if Full == False:
+        csvlast = int(max([i.split('_', 2)[2].split('.csv')[0] for i in csvDic]))
+        df = df.append(subCollect(next((s for s in csvDic if str(csvlast) in s), None), path))
     else:       
-        print ('Daten werden neu eingeladen...')
-        csvDic = fnmatch.filter(os.listdir(path),'Umsatzanzeige_*.csv')
         for inum, ind in enumerate(csvDic):
+            df = df.append(subCollect(ind, path))
+            '''print (inum, ind)
             if inum == 0:
-                df = subCollect(ind, path)
+                #df = getDataPyth()
+                
+                df = df.append(subCollect(ind, path))
             else:
-                df = df.append(subCollect(ind, path))   
-        df = sortDate(df)
-        df = setHardList(df)
-        #pickle.dump(df,open(os.path.join(path, fileBank), "wb"))
-        dumpData(df)
-        #tdate = getTimeStamp() #format date
-        #pickle.dump(df,open(os.path.join(path, 'TotalData_%s%s%s.p'%(tdate.year,tdate.strftime('%m'), tdate.strftime('%d'))), "wb"))
-    print('Bankdaten sind geladen')
-    return df
+                df = df.append(subCollect(ind, path))
+            '''
+    df = sortDate(df)
+    df = setHardList(df)
+    #pickle.dump(df,open(os.path.join(path, fileBank), "wb"))
+    dumpData(df)
+    FindDuplicates()
+    #tdate = getTimeStamp() #format date
+    #pickle.dump(df,open(os.path.join(path, 'TotalData_%s%s%s.p'%(tdate.year,tdate.strftime('%m'), tdate.strftime('%d'))), "wb"))
+    print('Bankdaten sind aktualisiert')
+    #return df
 
 def setHardList(df):
-    path = os.path.join(os.getcwd(),'Data','Hardlist.xlsx' )
-    df_hard = pd.read_excel(path)
-    #df = getDataPyth()
-    
-    df = getColName(df)
-    df_hard = getColName(df_hard)
-    for ind in df_hard.index:
-        df.loc[(df.BText == df_hard.loc[ind, 'BText'])   & 
-              (df.Person == df_hard.loc[ind, 'Person']) &
-              (df.Zweck == df_hard.loc[ind, 'Zweck']) & 
-              (df.Betrag == df_hard.loc[ind, 'Betrag']) , 'Oberstruktur'] = df_hard.loc[ind, 'Oberstruktur']
-
+    fn = 'HardList.xls'
+    path = os.path.join(os.getcwd(),'Data', fn )
+    if fn in os.listdir(os.getcwd()+'\Data'):
+        df_hard = pd.read_excel(path)
+        #df = getDataPyth()
+        
+        #df = renColName(df)
+        df_hard = renColName(df_hard)
+        for ind in df_hard.index:
+            df.loc[(df.BText == df_hard.loc[ind, 'BText'])   & 
+                  (df.Person == df_hard.loc[ind, 'Person']) &
+                  (df.Zweck == df_hard.loc[ind, 'Zweck']) & 
+                  (df.Betrag == df_hard.loc[ind, 'Betrag']) , 'Oberstruktur'] = df_hard.loc[ind, 'Oberstruktur']    
+            
+    else:
+        print('Sorry, no %s Data found'%fn)
+    df.drop_duplicates(inplace= True)
     return df
 
 def subCollect(ind, pathtoData):
@@ -68,6 +81,7 @@ def subCollect(ind, pathtoData):
     else:
         numrows = 7
     df = pd.read_csv(os.path.join(pathtoData, ind), skiprows=  numrows, sep=';', header =0, encoding='iso-8859-15' ) # später 0 auf variabel
+    df = renColName(df)
     #df = pd.read_csv(os.path.join(path, csvDic[0]), skiprows=  7, sep=';', header =0, encoding='iso-8859-15' )
     #df['Buchung'] = pd.to_datetime(df['Buchung'], yearfirst = True, format='%d.%m.%Y').dt.date
     #df.loc[:,'Valuta'] = pd.to_datetime(df.loc[:,'Valuta']).dt.date
@@ -79,6 +93,7 @@ def subCollect(ind, pathtoData):
     #print (List)
     df.ix[List,6]='REST' 
     df['Zahlungsart'] = pd.Series('Bank', index=df.index)
+    
     return df
 
 def convFloat(df, column):
@@ -125,7 +140,7 @@ def searchReplace(df, listIndex, Kategorie):
     for index1 in listIndex:
         if index1 == 1:
             listRegex = getFilterBankAuftrag()
-            print ('Detail durch empfanger')
+            print ('Detail durch Empfanger')
         else:
             listRegex = getFilterBankVerw()
         for k, v in listRegex.items():
@@ -164,11 +179,7 @@ def searchReplace(df, listIndex, Kategorie):
 #############..MAIN..###################
 ########################################
 
-def initiateBank():
-    print ('Bankdaten werden eingeladen...')
-    df = CollectBankData(True)
-    return df
-
+'''tbk
 def updateBank(test):
     df = getDataPyth()    
     strKassenbuch, path, fileBank = getFileName()    
@@ -185,6 +196,7 @@ def updateBank(test):
         #pickle.dump(df,open(os.path.join(path, 'TotalData_%s%s%s.p'%(tdate.year,tdate.month, tdate.day)), "wb"))
     print('Bankdaten sind aktualisiert')
     return df
+'''
 
 def ResetRest(df, overwrite):  
     

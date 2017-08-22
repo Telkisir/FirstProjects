@@ -28,6 +28,10 @@ def getDataPyth():
                 localPlace = temp    
     df = pickle.load(open(os.path.join(path, 'TotalData_'+str(localPlace)+'.p'), 'rb'))
     df = df.astype({'Betrag': np.float, 'Saldo':np.float})
+    df.index = range (0, len(df))
+    df = renColName(df)
+    df.loc[df.Saldo.isnull(), 'Saldo'] = 0.0
+    print ('Datum der Datei ist %s'%str(localPlace))
     return df
 
 
@@ -47,34 +51,57 @@ def FindDuplicates():
     delDf = df.drop( df.drop_duplicates().index) #funktioniert scheinbar mit dem Jahr nicht!
     df.drop_duplicates(inplace = True)
     #Delete BAR duoubles
-    duplies = df.drop(df.drop_duplicates(keep= False, subset=['Buchung', 'Betrag', 'Oberstruktur','Verwendungszweck', 'Auftraggeber/Empfänger']).index)
+    duplies = df.drop(df.drop_duplicates(keep= False, subset=['Buchung', 'Betrag', 'Oberstruktur','Zweck', 'Person']).index)
     df.drop(duplies.loc[duplies.Zahlungsart=='BAR'].index, inplace= True)
-    duplies = df.drop(df.drop_duplicates(keep= False, subset=['Zahlungsart', 'Betrag', 'Oberstruktur','Verwendungszweck', 'Auftraggeber/Empfänger']).index)
+    duplies = df.drop(df.drop_duplicates(keep= False, subset=['Zahlungsart', 'Betrag', 'Oberstruktur','Zweck', 'Person']).index)
     whitelist = ['Umbuchung  ', 'Miete Haendelstrasse 21 in  Kohlscheid  ',
        'Finanzierung A  ', 'Hochzeit  ',
        'Versicherungsnr. 072764358 Beitrag  Krankenversicherung  ',
        'Aufladung bei geringem Guthaben fue  r Ihr Prepaid-Konto 4915776822342-9  673. BLAU.DE SAGT DANKE  ',]
-    listVerwendung = duplies.Verwendungszweck.unique()
+    listVerwendung = duplies.Zweck.unique()
     for indVer in listVerwendung:
         if not(indVer in whitelist):
-            temp = duplies.loc[duplies.Verwendungszweck == indVer]
+            temp = duplies.loc[duplies.Zweck == indVer]
             listValues = temp.Betrag.unique()
             for indVal in listValues: 
                 temp_double = temp.loc[temp.Betrag == indVal]
                 if len(temp_double) == 2: # Annahme nur zwei Einträge
-                    if np.diff(temp_double.Buchung).astype('timedelta64[D]').astype(np.int)[0] in [28,29,30,31,32,365,364,366]:
-                         if temp_double.Buchung.iloc[0] < temp_double.Buchung.iloc[1]:
-                             delDf = delDf.append(temp_double.iloc[0])
-                             df.drop(temp_double.iloc[0].name, inplace = True)
-                         else:
-                             delDf = delDf.append(temp_double.iloc[1])
-                             df.drop(temp_double.iloc[1].name, inplace = True)
-                    #else: Abweichung vermutlich kein Eingabefehler
+                    if (temp_double.Person != 'Eurowings GmbH').any():
+                      try:  
+                        if np.diff(temp_double.Buchung).astype('timedelta64[D]').astype(np.int)[0] in [28,29,30,31,32,365,364,366]:
+                             if temp_double.Buchung.iloc[0] < temp_double.Buchung.iloc[1]:
+                                 delDf = delDf.append(temp_double.iloc[0])
+                                 df.drop(temp_double.iloc[0].name, inplace = True)
+                             else:
+                                 delDf = delDf.append(temp_double.iloc[1])
+                                 df.drop(temp_double.iloc[1].name, inplace = True)
+                      except TypeError:
+                          print (indVer+' verursacht Fehler bei diff. Ignoriert.')
+                          #else: Abweichung vermutlich kein Eingabefehler
                 else:
-                    print ('Für Betrag %f wurden beim Verwendungszweck %s mehr als zwei Dopplungen festgestellt',(indVal,indVer))
-
+                    print ('Für Betrag %f wurden beim Verwendungszweck %s mehr als zwei Dopplungen festgestellt'%(indVal,indVer))
+    df = FindDuplicateOberstruktur(df)
     dumpData(df)
     
+
+def FindDuplicateOberstruktur(df):
+    #lösche Dopplung aufgrund alter Datei und Regin Reihenfolge
+    a = df.drop(df.drop_duplicates(subset=['Zweck','Betrag','Saldo','BText','Zahlungsart','Buchung','Person'],keep=False).index)
+    df.drop(a.loc[(a.Oberstruktur== 'REST')].index, inplace= True)
+    a = df.drop(df.drop_duplicates(subset=['Zweck','Betrag','Saldo','BText','Zahlungsart','Buchung','Person'],keep=False).index)
+    df.drop(a.loc[(a.Oberstruktur== 'Sonstige')].index, inplace= True)
+    a = df.drop(df.drop_duplicates(subset=['Zweck','Betrag','Saldo','BText','Zahlungsart','Buchung','Person'],keep=False).index)
+    df.drop(a.loc[(a.Oberstruktur== 'Essen')].index, inplace= True)
+    a = df.drop(df.drop_duplicates(subset=['Zweck','Betrag','Saldo','BText','Zahlungsart','Buchung','Person'],keep=False).index)
+    df.drop(a.loc[(a.Oberstruktur== 'Umbuchung')].index, inplace= True)
+    a = df.drop(df.drop_duplicates(subset=['Zweck','Betrag','Saldo','BText','Zahlungsart','Buchung','Person'],keep=False).index)
+    df.drop(a.loc[(a.Oberstruktur== 'Freizeit')].index, inplace= True)
+    a = df.drop(df.drop_duplicates(subset=['Zweck','Betrag','Saldo','BText','Zahlungsart','Buchung','Person'],keep=False).index)
+    df.drop(a.loc[(a.Oberstruktur== 'Arbeit')].index, inplace= True)
+    a = df.drop(df.drop_duplicates(subset=['Zweck','Betrag','Saldo','BText','Zahlungsart','Buchung','Person'],keep=False).index)
+    df.index = range (0, len(df))
+ 
+    return df
 
 def getTimeStamp():
     '''import time
@@ -90,3 +117,12 @@ def dumpData(df):
     strKassenbuch, path, fileBank = getFileName()
     tdate = getTimeStamp() #format date
     pickle.dump(df,open(os.path.join(path, 'TotalData_%s%s%s.p'%(tdate.year,tdate.strftime('%m'), tdate.strftime('%d'))), "wb"))
+    
+    
+def renColName(df):
+    df.rename(columns={
+       u'Auftraggeber/Empfänger':'Person',
+       u'Buchungstext': 'BText',
+       u'Verwendungszweck': 'Zweck'}, inplace = True)
+       
+    return df

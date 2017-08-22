@@ -40,7 +40,7 @@ def getFilterBankVerw():
             
             )''',re.IGNORECASE | re.VERBOSE)
     UmbuchungenRegex = re.compile(r'''(
-            ^GA\sING | Hochzeit | Finanzierung
+            ^GA\sING |^Hochzeit | Finanzierung|Ruecklagen|Rücklagen
             )''',re.IGNORECASE | re.VERBOSE)      
     AutoRegex = re.compile(r'''(
             ^Markant\sTS |^Aral|^SB-Tank|^Westfalen\sTS|^ADAC|^KFZ|^HEM|Flixbus|Gottschalk
@@ -78,7 +78,7 @@ def getFilterBankAuftrag():
             ^Netto|^Dursty
             )''',re.IGNORECASE | re.VERBOSE)   
     AutoRegex = re.compile(r'''(
-            ^Jet|SB\sTank
+            ^Jet|SB\sTank|^Franz\sSchulze
             )''',re.IGNORECASE | re.VERBOSE)  
     SonstigRegex = re.compile(r'''(
             REAL|^Yves|IKEA|^HIT|^Ann\sSayed|^Stadt\sH.\sRath|
@@ -91,7 +91,7 @@ def getFilterBankAuftrag():
             Sipgate|^1u1
             )''',re.IGNORECASE | re.VERBOSE)  
     ArbeitRegex  = re.compile(r'''(
-            ^Hotel\sDress|Kasse\sder\sRWTH\sAAchen|^ZA\sAG|^Eugen
+            ^Hotel\sDress|^Kasse\sder\sRWTH\sAAchen|^ZA\sAG|^Eugen|^Stadtkasse\sItzehoe
             )''',re.IGNORECASE | re.VERBOSE)   
     VereinRegex  = re.compile(r'''(
             Physikalische|Schwimmverein|^Verein\sDeutscher\sIngenieure
@@ -109,21 +109,14 @@ def getFilterBankAuftrag():
     BeeRegex  = re.compile(r'''(
             ^Tierseuchenkasse|^Bienenfreunde
             )''',re.IGNORECASE | re.VERBOSE)
+    UmbRegex  = re.compile(r'''(
+            ^Klaus\sBiss
+            )''',re.IGNORECASE | re.VERBOSE)
     WedRegex  = re.compile(r'''(
             ^Schauinsland|^Stadt\sWitten|Gasthauss\sHerrig|^Felsenland|^Bijou|
             ^The\sJeweller|^Listmann|^Action|
             ^Markus\sEnglmeier
             )''',re.IGNORECASE | re.VERBOSE)
-    UmbRegex  = re.compile(r'''(
-            ^Klaus\sBiss
-            )''',re.IGNORECASE | re.VERBOSE)
     dicFilterBank2 = {'Umbuchung':UmbRegex,'Gesundheit':HealthRegex,'Vereine':VereinRegex, 'Hochzeit': WedRegex,'Bienen':BeeRegex ,'Kleidung':ClothRegex, 'Freizeit': FreeRegex, 'Spende': SpendeRegex, 'Arbeit': ArbeitRegex, 'Auto':AutoRegex, 'Sonstige': SonstigRegex, 'Nebenkosten': TeleRegex, 'Versicherung': InsRegex, 'Essen': FoodRegex}
     return dicFilterBank2
 
-def getColName(df):
-    df.rename(columns={
-       u'Auftraggeber/Empfänger':'Person',
-       u'Buchungstext': 'BText',
-       u'Verwendungszweck': 'Zweck'}, inplace = True)
-       
-    return df

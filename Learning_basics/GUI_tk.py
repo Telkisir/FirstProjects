@@ -13,7 +13,7 @@ Created on Mon Jan 23 21:05:39 2017
 import tkinter as tk__
 import numpy as np
 from Pathnames import getDataPyth, dumpData, FindDuplicates
-from ReadBankData import CollectBankData
+from ReadBankData import UpdateBankData
 import pandas as pd
 
 def readInValue():
@@ -26,12 +26,14 @@ def readInValue():
     check = DAU(value, da,  sDesc)
     if check == True:
         df =savetoBase(value, da, oName, sDesc, sPerson)
-        delID()
+        clearArrays()
+        #delID() Warum steht das hier?
         return df
 
 def savetoBase(value, datum, oName, desc, person):
+    df = getDataPyth()
     rowmax = len(df)
-    if VFID.get()== np.empty():
+    if VFID.get() == '':
         valInd = rowmax +1
     else:
         valInd = float(VFID.get())
@@ -40,8 +42,8 @@ def savetoBase(value, datum, oName, desc, person):
     #tdate = datetime.datetime.strptime(datum,"%d.%m.%Y").date()
     df.loc[valInd, df.columns[0]] = pd.to_datetime(datum, yearfirst = True, format='%d.%m.%Y').date()
     df.loc[valInd, 'Oberstruktur'] = oName
-    df.loc[valInd, 'Verwendungszweck'] = str(desc)
-    df.loc[valInd, 'Betrag'] = float(value)
+    df.loc[valInd, 'Zweck'] = str(desc)
+    df.loc[valInd, 'Betrag'] = float(value)*-1
     df.loc[valInd, 'Zahlungsart'] = 'BAR'                
     df.loc[valInd, df.columns[1]] = person     
     print ('Eintrag eingetragen')
@@ -61,7 +63,11 @@ def DAU(value, da, sDesc):
             OK = True
         #break    
     except ValueError:
-        print ('Eingabe nicht korrekt, bitte prüfen.')
+        try:
+            pd.to_datetime(da, yearfirst = True, format='%d.%m.%Y').date()           
+        except ValueError:
+            print ('Datum nicht korrekt, bitte prüfen.')
+        print ('Eingaben nicht korrekt, bitte prüfen.')
         OK = False
         #break            
     return OK
@@ -73,7 +79,7 @@ def findIt():
         VFID.insert(0,valID)
         VFdate.insert(0,df.loc[valID, df.columns[0]])
         VFvalue.insert(0, df.loc[valID, 'Betrag'])
-        VFdesc.insert(0,df.loc[valID, 'Verwendungszweck']) 
+        VFdesc.insert(0,df.loc[valID, 'Zweck']) 
 
  
 def checkID():
@@ -90,7 +96,7 @@ def checkID():
             print ('ID ist kein integer. Eingabe prüfen.')
             return  False 
     except ValueError:
-        print ('Eingabe nicht korrekt, bitte prüfen.')
+        print ('Eingabe bei ID nicht korrekt, bitte prüfen.')
         return False
        
 def printIt():    
@@ -138,7 +144,7 @@ def replaceID():
             df.loc[valID, 'Oberstruktur'] = sGroup.get()
             count += 1
         if VFdesc.get():
-            df.loc[valID, 'Verwendungszweck'] = VFdesc.get()
+            df.loc[valID, 'Zweck'] = VFdesc.get()
             count += 1
     if count > 0:
         print('ID %i geändert'%valID)
@@ -147,7 +153,7 @@ def replaceID():
         print ('Keine Eingaben vorhanden')
 
 def Bank():
-    CollectBankData(True)
+    UpdateBankData(True)
 
 if __name__ == '__main__' :
     te = '24.7.2017'

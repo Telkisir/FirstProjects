@@ -3,6 +3,13 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+#Personal
+Track/*.pickle
+Track/*.xlsx
+Track/*.yaml
+Track/*.json
+Track/*.csv
+
 # C extensions
 *.so
 #private Data
