@@ -3,95 +3,125 @@
 Created on Mon Jul 31 17:10:02 2017
 
 @author: K. Biß
-Project 2 
+Project 2
 pip install googlefinance
 
 
 
-smybol collected by 
+smybol collected by
 https://www.boerse-stuttgart.de/de/Sunwin-Stevia-Aktie-US86803D1090
 
 Quelle:
 http://help.quandl.com/article/68-is-there-a-rate-limit-or-speed-limit-for-api-usage
 
+exchange-abbraviations:
+https://finance.yahoo.com/lookup/all?s=Ingenico&t=A&m=ALL&r=
+https://github.com/Benny-/Yahoo-ticker-symbol-downloader
+
+Downloader data:
+https://pypi.python.org/pypi/ystockquote/
 """
-
-import webbrowser
-import requests
-import googlefinance, json
-import pandas_datareader.data as wb
-import datetime
-
-from googlefinance import getQuotes
-#google finance get historical data python
-
-
-date_start = datetime.datetime(2016,1,1) #good
-date_end   = datetime.date.today() #good
-
-
-
-address = 'http://www.boerse.de/historische-kurse/Siemens-Aktie/DE0007236101'
-webbrowser.open(address)
-res = requests.get(address)
-
-wkn = '723610' # stock symbol VOW3
-symbol = 'VOW3'
-symbol = 'M5Z' #'Manz'
-symbol = 'AAPL'
-print (json.dumps(getQuotes(symbol)))
-
-
-from yahoo_finance import Share
-yahoo = Share(symbol)
-
-
-
-
-#https://stackoverflow.com/questions/44136765/python-using-google-finance-to-download-index-data
 import pandas as pd
-from pandas_datareader import data as web   
-import datetime
-start = datetime.datetime(2016,1,1)
-end   = datetime.date.today()
-apple = web.DataReader('aapl', 'google', start, end)
-
-
-#https://stackoverflow.com/questions/44080070/google-finance-historical
 import pandas_datareader.data as wb
-web_df = wb.DataReader(symbol, 'google', date_start, date_end) #works for AAPL but not for the others
+from pandas_datareader._utils import RemoteDataError
+import numpy as np
+import pickle
 
-#https://stackoverflow.com/questions/10040954/alternative-to-google-finance-api
-address = 'http://finance.yahoo.com/d/quotes.csv?s=AAPL+GOOG+MSFT&f=sb2b3jk'
-webbrowser.open(address)
 
-''' Sehr gute Seite'''
+def getDataSingle(ticker):
+    import datetime
+    now = datetime.datetime.now()
+    start_date = '2007-01-01'
+    end_date = now.strftime("%Y-%m-%d")
+    data_source = 'yahoo'
+    return wb.DataReader(ticker, data_source, start_date, end_date)
+
+
+def getListOrigin():
+    import os
+    pw = os.path.join('E:', 'Finanzen', 'Aktienhandel',
+                      'Aktienjournal_symbol.xls')
+    dftickers = pd.read_excel(pw, sheetname='Symbols')
+    dftickers.drop(dftickers.loc[dftickers.Ticker.isnull()].index,
+                                 inplace=True)
+    dftickers.set_index(np.arange(0, len(dftickers)), inplace=True)
+    return dftickers
+
+
+def checkStock(dftickers, ticker, pos):
+    data = findData(ticker)
+    if data is None:
+        print('Keine Daten für %s' % ticker.split(sep='.')[0])
+        return dftickers
+    else:
+        print('Dataset %s wird geprüft' % ticker)
+    m200 = np.float32(data.AdjClose.rolling(window=200).mean()[-1:])
+    m20 = np.float32(data.AdjClose.rolling(window=20).mean()[-1:])
+    m10 = np.float32(data.AdjClose.rolling(window=10).mean()[-1:])
+    m5 = np.float32(data.AdjClose.rolling(window=5).mean()[-1:])
+    lval = data.AdjClose[-1:].iloc[0]
+    if (data.AdjClose[-20:] > lval).any():
+        dftickers.loc[pos, 'M1Regel'] = 'No'
+    else:
+        dftickers.loc[pos, 'M1Regel'] = 'Yes'
+    if m20 < m10 < m5:
+        dftickers.loc[pos, 'CrossMA'] = 'Yes'
+    else:
+        dftickers.loc[pos, 'CrossMA'] = 'No'
+    if m200 < lval:
+        dftickers.loc[pos, 'CrossMA200'] = 'Up'
+    else:
+        dftickers.loc[pos, 'CrossMA200'] = 'Down'
+    dftickers.loc[pos, 'LastUpdate'] = data.Date[-1:].iloc[0]
+    dftickers.loc[pos, 'Pvalue'] = lval
+    return dftickers
+
+
+def UpdateJournal(raw=True):
+    if raw:
+        dftickers = getListOrigin()
+    else:
+        dftickers = getListUpdated()
+    for index in dftickers.index:
+        ticker = dftickers.Ticker.loc[index]
+        dftickers = checkStock(dftickers, ticker, index)
+    return dftickers
+
+
+def setFazit(dftickers):
+    print('TODO')
+    '#TODO'
+
+
+def getListUpdated():
+    return pickle.load(open('Journal.p', 'rb'))
+
+
+def findData(ticker):
+    symbols = pickle.load(open('stocks.p', 'rb'))
+    stocksym = ticker.split(sep='.')[0]
+    exchange = list(symbols.loc[symbols.Ticker.str.contains(stocksym),
+                                'Ticker'])
+    for place in exchange:
+        try:
+            data = getDataSingle(place)
+            data.rename(columns={u'Adj Close': 'AdjClose'}, inplace=True)
+            data.reset_index(inplace=True)
+            return data
+        except RemoteDataError:
+            print('Data nicht einlesbar für Symbol %s' % place)
+    return
+
+
+def setSymbols():
+    symbols = pd.read_excel('stocks.xlsx')
+    pickle.dump(symbols, open('stocks.p', 'wb'))
+
+
+'''
+#######Sehr gute Seite#########
 #http://www.learndatasci.com/python-finance-part-yahoo-finance-api-pandas-matplotlib/
-from pandas_datareader import data
-import matplotlib.pyplot as plt
-import pandas as pd
-import yahoo_finance
-import fix_yahoo_finance 
 
-
-# Define the instruments to download. We would like to see Apple, Microsoft and the S&P500 index.
-tickers = ['AAPL', 'MSFT', 'XSDG', 'AMZ', 'WCH']
-           #'VOW3', 'ABEA', 'GEC']
-
-# Define which online source one should use
-data_source = 'yahoo'
-
-# We would like all available data from 01/01/2000 until 12/31/2016.
-start_date = '2010-01-01'
-end_date = '2016-12-31'
-
-# User pandas_reader.data.DataReader to load the desired data. As simple as that.
-panel_data = data.DataReader(tickers, data_source, start_date, end_date)
-
-
-
-data_source = 'google'
-panel_data = data.DataReader(tickers, data_source, start_date, end_date)
 
 # Getting just the adjusted closing prices. This will return a Pandas DataFrame
 # The index in this DataFrame is the major index of the panel_data.
@@ -137,12 +167,4 @@ ax.plot(long_rolling_msft.index, long_rolling_msft, label='100 days rolling')
 ax.set_xlabel('Date')
 ax.set_ylabel('Adjusted closing price ($)')
 ax.legend()
-
-
-#https://stackoverflow.com/questions/44112403/yahoo-finance-api-url-not-working-python-fix-for-pandas-datareader
-import pandas_datareader.data as pdweb
-from pandas_datareader import data as pdr
-start_date = '2010-01-01'
-end_date = '2016-12-31'
-data1 = pdr.get_data_yahoo('AAPL',start_date, end_date)
-data2 = pdr.get_data_yahoo(['AAPL','GEC', 'MSFT', 'XSDG', 'AMZ', 'WCH'],start_date, end_date, as_panel=False)
+'''
