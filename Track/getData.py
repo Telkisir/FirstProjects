@@ -31,10 +31,16 @@ import pickle
 def getDataSingle(ticker):
     import datetime
     now = datetime.datetime.now()
-    start_date = '2007-01-01'
+    start_date = '2007-01-02'
     end_date = now.strftime("%Y-%m-%d")
     data_source = 'yahoo'
-    return wb.DataReader(ticker, data_source, start_date, end_date)
+    data = wb.DataReader(ticker, data_source, start_date, end_date)
+    all_weekdays = pd.date_range(start=start_date, end=end_date, freq='B')
+    data = data.reindex(all_weekdays).fillna(method='ffill')
+    data.reset_index(inplace=True)
+    data.rename(columns={u'Adj Close': 'AdjClose',
+                         u'index': 'Date'}, inplace=True)
+    return data
 
 
 def getListOrigin():
@@ -85,6 +91,7 @@ def UpdateJournal(raw=True):
     for index in dftickers.index:
         ticker = dftickers.Ticker.loc[index]
         dftickers = checkStock(dftickers, ticker, index)
+    pickle.dump(dftickers, open('dftickers.p', 'wb'))
     return dftickers
 
 
@@ -105,8 +112,6 @@ def findData(ticker):
     for place in exchange:
         try:
             data = getDataSingle(place)
-            data.rename(columns={u'Adj Close': 'AdjClose'}, inplace=True)
-            data.reset_index(inplace=True)
             return data
         except RemoteDataError:
             print('Data nicht einlesbar für Symbol %s' % place)
