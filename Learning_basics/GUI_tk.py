@@ -178,46 +178,46 @@ if __name__ == '__main__' :
     Bchage = tk__.Button(ro, text ="Eintrag ändern", command =replaceID)
     Bchage.place(x=x1+100,y=300)
     B_Bank = tk__.Button(ro, text ="Bankdaten aktualisieren", command = Bank )
-    B_Bank.place(x= 350 ,y= 300) 
+    B_Bank.place(x=350 ,y=300) 
     LID = tk__.Label(ro, text='ID:')
     VFID = tk__.Entry(ro, bd = 5) #Value Field
-    LID.place(x = x1, y= 250)
-    VFID.place(x =x1+40, y= 250)
+    LID.place(x=x1, y= 250)
+    VFID.place(x=x1+40, y=250)
     #Betrag  
     Lvalue = tk__.Label(ro, text='Betrag:')
     VFvalue = tk__.Entry(ro, bd = 5) #Value Field
-    Lvalue.place(x = x1, y= 40)
-    VFvalue.place(x =x2, y= 40)
+    Lvalue.place(x=x1, y=40)
+    VFvalue.place(x=x2, y=40)
     #Datum
     L2 = tk__.Label(ro, text='Datum:')
     VFdate = tk__.Entry(ro, bd = 5) #Value Field
-    L2.place(x =x1, y= 60)
-    VFdate.place(x =x2, y= 60)
+    L2.place(x =x1, y=60)
+    VFdate.place(x =x2, y=60)
     #Verwendungszweck
     L3 = tk__.Label(ro, text='Gruppe:')
-    L3.place(x =x1, y= 85)
+    L3.place(x =x1, y=85)
     lst1 = df['Oberstruktur'].unique()
     sGroup = tk__.StringVar()
     dropGroup = tk__.OptionMenu(ro,sGroup,*lst1)
-    dropGroup.place( x = x2, y = 85)   
+    dropGroup.place( x = x2, y=85)   
     B_addgroup = tk__.Button(ro, text ="Gruppe hinzufügen", command = addSome)
-    B_addgroup.place(x= x2  + 150 ,y= 33)  
+    B_addgroup.place(x= x2  + 150 ,y=33)  
     L32 = tk__.Label(ro, text='Gruppe erweitern mit:')
-    L32.place(x =x2 + 140, y= 60)
-    VFgroup = tk__.Entry(ro, bd = 5) #Value Field
-    VFgroup.place(x =x2 + 140, y= 85)
+    L32.place(x =x2 + 140, y=60)
+    VFgroup = tk__.Entry(ro, bd =5) #Value Field
+    VFgroup.place(x =x2 + 140, y=85)
     #Genaue Beschreibung
     L4 = tk__.Label(ro, text='Beschreibung:' )
-    VFdesc = tk__.Entry(ro, bd = 5, width = 50) #Value Field
-    L4.place(x =x1, y= 110)
-    VFdesc.place(x =x2, y= 110)
+    VFdesc = tk__.Entry(ro, bd=5, width=50) #Value Field
+    L4.place(x =x1, y=110)
+    VFdesc.place(x=x2, y=110)
     #Zahler
     L5 = tk__.Label(ro, text='Person:')
-    L5.place(x =x1, y= 180)
+    L5.place(x=x1, y=180)
     lst2 = ['Klaus', 'Gina']
     sUser = tk__.StringVar()
     dropUser = tk__.OptionMenu(ro,sUser,*lst2)
-    dropUser.place( x = x2, y = 180)    
+    dropUser.place(x=x2, y=180)    
  
     ro.mainloop()
 

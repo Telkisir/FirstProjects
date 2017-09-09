@@ -16,13 +16,11 @@ Aktuelle Arbeit:
     Index homogenisieren . duplicate funktioniert noch?
     update im test modus (filter anüpassen nicht abspeichern)
 '''
-
 import fnmatch, os, re, pandas as pd
 from Dictonary_Oberstruktur import getFilterBankVerw, getFilterBankAuftrag
 import pickle
 from Pathnames import getFileName, getDataPyth, getTimeStamp, dumpData, renColName, FindDuplicates
 import numpy as np
-
 
 
 def UpdateBankData( Full = False):
@@ -53,15 +51,14 @@ def UpdateBankData( Full = False):
     #tdate = getTimeStamp() #format date
     #pickle.dump(df,open(os.path.join(path, 'TotalData_%s%s%s.p'%(tdate.year,tdate.strftime('%m'), tdate.strftime('%d'))), "wb"))
     print('Bankdaten sind aktualisiert')
-    #return df
+
 
 def setHardList(df):
     fn = 'HardList.xls'
     path = os.path.join(os.getcwd(),'Data', fn )
     if fn in os.listdir(os.getcwd()+'\Data'):
         df_hard = pd.read_excel(path)
-        #df = getDataPyth()
-        
+        #df = getDataPyth()        
         #df = renColName(df)
         df_hard = renColName(df_hard)
         for ind in df_hard.index:
@@ -74,6 +71,7 @@ def setHardList(df):
         print('Sorry, no %s Data found'%fn)
     df.drop_duplicates(inplace= True)
     return df
+
 
 def subCollect(ind, pathtoData):
     if int((ind.split('_'))[2].split('.csv')[0]) > 20170200:
@@ -92,9 +90,9 @@ def subCollect(ind, pathtoData):
     List = df.loc[df['Oberstruktur'] =='KEINE'].index 
     #print (List)
     df.ix[List,6]='REST' 
-    df['Zahlungsart'] = pd.Series('Bank', index=df.index)
-    
+    df['Zahlungsart'] = pd.Series('Bank', index=df.index)    
     return df
+
 
 def convFloat(df, column):
     for colName in column:
@@ -108,10 +106,12 @@ def convFloat(df, column):
         df.iloc[:][colName] = pd.to_numeric(df.iloc[:][colName])
     return df
 
+
 def convDate(df, column):
     for colName in column:
         df[colName] = pd.to_datetime(df[colName], yearfirst = True, format='%d.%m.%Y').dt.date
     return df
+
 
 def convCategories(df, listIndex):
     #Oberklassen-Klassifikation per Buchungstext
@@ -123,8 +123,8 @@ def convCategories(df, listIndex):
     convRatioBank(df)    
     #Unterklassen-Klassifikation per Auftraggeber/Empfänger und Verwendungszweck    
     #rename Index
-    
     return df
+
 
 def convRatioBank(df):
     counter =0
@@ -173,31 +173,6 @@ def searchReplace(df, listIndex, Kategorie):
     return df
 
 
-
-
-########################################
-#############..MAIN..###################
-########################################
-
-'''tbk
-def updateBank(test):
-    df = getDataPyth()    
-    strKassenbuch, path, fileBank = getFileName()    
-    print ('Daten werden aktualisiert...')
-    csvDic = fnmatch.filter(os.listdir(path),'Umsatzanzeige_*.csv')
-    for inum, ind in enumerate(csvDic):
-        df = df.append(subCollect(ind, path))   
-    df = sortDate(df)
-    
-    if test == True:
-        dumpData(df)
-        #pickle.dump(df,open(os.path.join(path, 'TotalData_'+sTimeStamp+'.p'), "wb"))
-        #tdate = getTimeStamp()
-        #pickle.dump(df,open(os.path.join(path, 'TotalData_%s%s%s.p'%(tdate.year,tdate.month, tdate.day)), "wb"))
-    print('Bankdaten sind aktualisiert')
-    return df
-'''
-
 def ResetRest(df, overwrite):  
     
     if overwrite == True:
@@ -206,37 +181,9 @@ def ResetRest(df, overwrite):
     
     return  df.loc[df['Oberstruktur'] == 'REST']   
 
+
 def sortDate(df):
     df = df.sort_values('Buchung', axis = 0)
     df = df.drop_duplicates()
     df = df.set_index(np.arange(0, len(df)))    
     return df
-#Auswertung
-#Monatsausgabe der Kategorien
-#Abgleich von theoretisch zu erfasstem wert und fixen
-
-# Jahresplanung und Projektionen
-
-
-
-
-#Liste zur bestehenden dataframe hinzufügen
-
-'''
-Codes
-#df2 = df.unstack()
-#df3 = df.groupby(by='Buchung').sum()
-
-
-#http://chrisalbon.com/python/pandas_dataframe_importing_csv.html      
-#wb = openpyxl.load_workbook(csvFiles[0]) # nachher for schleife
-#ws = wb.get_index(0)
-
-#for rowloc in ws['A1':'C4']:
-#    rowloc.find('Konto')
-#    print (rowloc)       
- #df0  = pd.read_csv('Umsatzanzeige_5416578386_20170110.csv',  sep=";", encoding='iso-8859-15' )   
-
-#
-#http://pandas.pydata.org/pandas-docs/stable/indexing.html  
-'''
