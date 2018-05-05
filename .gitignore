@@ -9,6 +9,8 @@ Track/*.xlsx
 Track/*.yaml
 Track/*.json
 Track/*.csv
+Track/J*.p
+Track/Data/*.p
 
 # C extensions
 *.so

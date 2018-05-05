@@ -11,15 +11,17 @@ def getFilterBankVerw():
     KaltRegex = re.compile(r'Miete')
     NBKRegex = re.compile(r'''(
             Strom | Stromio | Energieversorgung | #Strom
-            simyo | telefon | Unitymedia | Prepaid |
-            Rundfunk | Mobilfunkrechnung|\d{14}-\d{8}|
-            Nebenkostenabrechnung
+            Unitymedia |Rundfunk|Nebenkostenabrechnung
+            )''', re.IGNORECASE | re.VERBOSE)
+    TeleRegex = re.compile(r'''(
+            Sipgate|^1u1|Telefonica|simyo|telefon|
+            | Mobilfunkrechnung|\d{14}-\d{8}| Prepaid
             )''', re.IGNORECASE | re.VERBOSE)
     InsuranceRegex = re.compile(r'''(
             Hausrat | Versicherung | Reiseschutz|^WWK.
             )''', re.IGNORECASE | re.VERBOSE)
     FoodRegex = re.compile(r'''(
-            Aldi |Lidl| REWE|\sEDEKA\s|Penny
+            Aldi |Lidl| REWE|\sEDEKA\s|Penny|^Metro
             )''', re.IGNORECASE | re.VERBOSE)
     IncomeRegex = re.compile(r'''(
             Gehalt | Rente |
@@ -41,7 +43,7 @@ def getFilterBankVerw():
             )''', re.IGNORECASE | re.VERBOSE)
     FreeRegex = re.compile(r'''(
             Sauna|^Miniatur|^Decathlon|^Spielbar|
-            ^Reitbeteiligung
+            ^Reitbeteiligung|^Gommlich
             )''', re.IGNORECASE | re.VERBOSE)
     BeeRegex = re.compile(r'''(
             ^Geller|^Honigkurs
@@ -56,6 +58,9 @@ def getFilterBankVerw():
     HealthRegex = re.compile(r'''(
             Malteser-Apotheke | Fielmann
             )''', re.IGNORECASE | re.VERBOSE)
+    KV = re.compile(r'''(
+            C722630548
+            )''', re.IGNORECASE | re.VERBOSE)
     dicOberstruktur = {'Arbeit': ArbeitRegex, 'Gesundheit': HealthRegex,
                        'Urlaub': UrlaubRegex, 'Bienen': BeeRegex,
                        'Freizeit': FreeRegex, 'Diverses': DivRegex,
@@ -63,7 +68,8 @@ def getFilterBankVerw():
                        'Umbuchung': UmbuchungenRegex, 'Kaltmiete': KaltRegex,
                        'Nebenkosten': NBKRegex, 'Versicherung': InsuranceRegex,
                        'Essen': FoodRegex, 'Einnahmen': IncomeRegex,
-                       'Sonstige': SonstigRegex}
+                       'Sonstige': SonstigRegex, 'Krankenversicherung': KV,
+                       'Telefon': TeleRegex}
     return dicOberstruktur
 
 
@@ -94,7 +100,7 @@ def getFilterBankAuftrag():
             Physikalische|Schwimmverein|^Verein\sDeutscher\sIngenieure
             )''', re.IGNORECASE | re.VERBOSE)
     SpendeRegex  = re.compile(r'''(
-            ^^SOS
+            ^^SOS|^Aerzte\sohne\sGrenzen
             )''', re.IGNORECASE | re.VERBOSE)
     FreeRegex  = re.compile(r'''(
             ^Visa\sSocialdeal|^Spielbar
@@ -119,6 +125,6 @@ def getFilterBankAuftrag():
                       'Bienen': BeeRegex, 'Kleidung': ClothRegex,
                       'Freizeit': FreeRegex, 'Spende': SpendeRegex,
                       'Arbeit': ArbeitRegex, 'Auto': AutoRegex,
-                      'Sonstige': SonstigRegex, 'Nebenkosten': TeleRegex,
+                      'Sonstige': SonstigRegex, 'Telefon': TeleRegex,
                       'Versicherung': InsRegex, 'Essen': FoodRegex}
     return dicFilterBank2

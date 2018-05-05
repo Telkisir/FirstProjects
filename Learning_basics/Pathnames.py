@@ -6,6 +6,7 @@ Created on Thu Jan 26 16:39:17 2017
 """
 import pickle, fnmatch, re, os
 import numpy as np
+import pandas as pd
 
 
 def getFileName():
@@ -24,10 +25,11 @@ def getDataPyth():
     for i in range(0, len(pDic)):
         if re.search(dateRegex, pDic[i]) != None:
             #  lastdate = lastdate.append(re.search(re.compile(r'(\d{8})'), pDic[i]))
-            temp =int(re.search(re.compile(r'(\d{8})'), pDic[i]).group())
+            temp = int(re.search(re.compile(r'(\d{8})'), pDic[i]).group())
             if temp > localPlace:
                 localPlace = temp
-    df = pickle.load(open(os.path.join(path, 'TotalData_' + str(localPlace) + '.p'), 'rb'))
+    df = pd.read_pickle(os.path.join(path, 'TotalData_' +
+                                     str(localPlace) + '.p'))
     df = df.astype({'Betrag': np.float, 'Saldo': np.float})
     df.index = range(0, len(df))
     df = renColName(df)
