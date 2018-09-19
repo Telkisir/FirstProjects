@@ -11,17 +11,18 @@ def getFilterBankVerw():
     KaltRegex = re.compile(r'Miete')
     NBKRegex = re.compile(r'''(
             Strom | Stromio | Energieversorgung | #Strom
-            Unitymedia |Rundfunk|Nebenkostenabrechnung
+            Unitymedia |Rundfunk|Nebenkostenabrechnung|^Nebenkosten
             )''', re.IGNORECASE | re.VERBOSE)
     TeleRegex = re.compile(r'''(
-            Sipgate|^1u1|Telefonica|simyo|telefon|
+            Sipgate|^1u1|Telefonica|simyo|telefon
             | Mobilfunkrechnung|\d{14}-\d{8}| Prepaid
             )''', re.IGNORECASE | re.VERBOSE)
     InsuranceRegex = re.compile(r'''(
             Hausrat | Versicherung | Reiseschutz|^WWK.
             )''', re.IGNORECASE | re.VERBOSE)
     FoodRegex = re.compile(r'''(
-            Aldi |Lidl| REWE|\sEDEKA\s|Penny|^Metro
+            Aldi |^Lidl| REWE|\sEDEKA\s|Penny|^Metro|
+            ^FAMILA\sHANDELSMARKT|^ICA|^COOP|^GOURMET\sTEMPEL
             )''', re.IGNORECASE | re.VERBOSE)
     IncomeRegex = re.compile(r'''(
             Gehalt | Rente |
@@ -36,14 +37,18 @@ def getFilterBankVerw():
             )''', re.IGNORECASE | re.VERBOSE)
     AutoRegex = re.compile(r'''(
             ^Markant\sTS |^Aral|^SB-Tank|^Westfalen\sTS|^ADAC|^KFZ|^HEM|
-            Flixbus|Gottschalk
+            Gottschalk|^Shell
+            )''', re.IGNORECASE | re.VERBOSE)
+    MobilRegex = re.compile(r'''(
+            Flixbus
             )''', re.IGNORECASE | re.VERBOSE)
     ClothRegex = re.compile(r'''(
-            Schuhe|^CA|^Decathlon|^Jack\sWolfskin
+            Schuhe|^CA|^Decathlon|^Jack\sWolfskin|JAKO-O\sFAMILYSTORE
             )''', re.IGNORECASE | re.VERBOSE)
     FreeRegex = re.compile(r'''(
             Sauna|^Miniatur|^Decathlon|^Spielbar|
-            ^Reitbeteiligung|^Gommlich
+            ^Reitbeteiligung|^Gommlich|Hardware
+            |^You\sdon't\sknow\sJack|^WT\sGutschrift
             )''', re.IGNORECASE | re.VERBOSE)
     BeeRegex = re.compile(r'''(
             ^Geller|^Honigkurs
@@ -69,32 +74,35 @@ def getFilterBankVerw():
                        'Nebenkosten': NBKRegex, 'Versicherung': InsuranceRegex,
                        'Essen': FoodRegex, 'Einnahmen': IncomeRegex,
                        'Sonstige': SonstigRegex, 'Krankenversicherung': KV,
-                       'Telefon': TeleRegex}
+                       'Telefon': TeleRegex, 'Mobilität': MobilRegex}
     return dicOberstruktur
 
 
 def getFilterBankAuftrag():
+    # Empfänger
     InsRegex = re.compile(r'''(
             ^AAchenmuenchener
             )''', re.IGNORECASE | re.VERBOSE)
     FoodRegex = re.compile(r'''(
-            ^Netto|^Dursty
+            ^Netto|^Dursty|^LABYRINTH|^Mitchells\sButlers|^REWE\sMarkt
             )''', re.IGNORECASE | re.VERBOSE)
     AutoRegex = re.compile(r'''(
-            ^Jet|SB\sTank|^Franz\sSchulze
+            ^Jet|SB\sTank|^Franz\sSchulze|^PITSTOP|^Adac
             )''', re.IGNORECASE | re.VERBOSE)
     SonstigRegex = re.compile(r'''(
             REAL|^Yves|IKEA|^HIT|^Ann\sSayed|^Stadt\sH.\sRath|
             ^Rossmann|^Easybuy|^GARTENC\.CRUMBACH |^Bauhaus
             )''', re.IGNORECASE | re.VERBOSE)
     HealthRegex = re.compile(r'''(
-            ^Zieten|Constanze\sSchneider|^Fielmann|^LAURWEG
+            ^Zieten|Constanze\sSchneider|^Fielmann|^LAURWEG|BKK Linde
+            |Marienhospital
             )''', re.IGNORECASE | re.VERBOSE)
     TeleRegex  = re.compile(r'''(
-            Sipgate|^1u1
+            Sipgate|^1u1|Telefonica|^Basic
             )''', re.IGNORECASE | re.VERBOSE)
     ArbeitRegex  = re.compile(r'''(
-            ^Hotel\sDress|^Kasse\sder\sRWTH\sAAchen|^ZA\sAG|^Eugen|^Stadtkasse\sItzehoe
+            ^Hotel\sDress|^Kasse\sder\sRWTH\sAAchen|^ZA\sAG|^Eugen
+            |^Stadtkasse\sItzehoe|^RWTH\sAachen            
             )''', re.IGNORECASE | re.VERBOSE)
     VereinRegex  = re.compile(r'''(
             Physikalische|Schwimmverein|^Verein\sDeutscher\sIngenieure
@@ -103,11 +111,14 @@ def getFilterBankAuftrag():
             ^^SOS|^Aerzte\sohne\sGrenzen
             )''', re.IGNORECASE | re.VERBOSE)
     FreeRegex  = re.compile(r'''(
-            ^Visa\sSocialdeal|^Spielbar
+            ^Visa\sSocialdeal|^Spielbar|
+            ^Gommlich|1\sUP\sSTORE|FinTech
+            |^GARTENC.\sCRUMBACH|^CONRAD\sELECTRONIC|^Decathlon
+            |^Posteo
             )''', re.IGNORECASE | re.VERBOSE)
     ClothRegex  = re.compile(r'''(
             ^Siemes|H\+M|^Reno|^Lust\sfor\slife|
-            Robert\sLey\sHer
+            Robert\sLey\sHer|^Deichmann
             )''', re.IGNORECASE | re.VERBOSE)
     BeeRegex  = re.compile(r'''(
             ^Tierseuchenkasse|^Bienenfreunde

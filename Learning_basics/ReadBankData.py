@@ -56,7 +56,7 @@ def UpdateBankData( Full = False):
 def setHardList(df):
     fn = 'HardList.xls'
     path = os.path.join(os.getcwd(),'Data', fn )
-    if fn in os.listdir(os.getcwd()+'\Data'):
+    if fn in os.listdir(os.path.join(os.getcwd(), 'Data')):
         df_hard = pd.read_excel(path)
         #df = getDataPyth()        
         #df = renColName(df)
@@ -74,11 +74,11 @@ def setHardList(df):
 
 
 def subCollect(ind, pathtoData):
-    if int((ind.split('_'))[2].split('.csv')[0]) > 20170200:
-        numrows = 6
-    else:
-        numrows = 7
-    df = pd.read_csv(os.path.join(pathtoData, ind), skiprows=  numrows, sep=';', header =0, encoding='iso-8859-15' ) # später 0 auf variabel
+    #if int((ind.split('_'))[2].split('.csv')[0]) > 20170200:
+    #    numrows = 6
+    #else:
+    #    numrows = 7
+    df = pd.read_csv(os.path.join(pathtoData, ind), decimal=",", skiprows=12, sep=';', header=0, encoding='iso-8859-15') # später 0 auf variabel
     df = renColName(df)
     #df = pd.read_csv(os.path.join(path, csvDic[0]), skiprows=  7, sep=';', header =0, encoding='iso-8859-15' )
     #df['Buchung'] = pd.to_datetime(df['Buchung'], yearfirst = True, format='%d.%m.%Y').dt.date
@@ -86,16 +86,18 @@ def subCollect(ind, pathtoData):
     df = convFloat(df, ['Saldo','Betrag']) # mache aus 2.500,00 --> 2500.00
     df = convDate(df,['Buchung','Valuta']) # mache aus String --> date
     df = df.drop(df.columns[[1,6,8]], axis=1) # lösche Währung und Valuta
-    df = convCategories(df, [3,1] ) #3= Verwendungszweck , 1 =Empfänger
-    List = df.loc[df['Oberstruktur'] =='KEINE'].index 
+    df2 = convCategories(df, [3,1] ) #3= Verwendungszweck , 1 =Empfänger
+    List = df.loc[df['Oberstruktur'] == 'KEINE'].index 
     #print (List)
-    df.ix[List,6]='REST' 
+    df.loc[List,'Oberstruktur']='REST' 
     df['Zahlungsart'] = pd.Series('Bank', index=df.index)    
     return df
 
 
 def convFloat(df, column):
     for colName in column:
+        df[colName] = pd.to_numeric(df[colName].str.replace('.','').str.replace(',', '.'))
+        """ old code
         tempSaldo = df.loc[:,[colName]]
         for index2 in range(0,len(tempSaldo)):
             conRegex = re.compile(r'\.(\d{3}\.)') # Solange beträg unter 1 Millionen ok
@@ -104,6 +106,7 @@ def convFloat(df, column):
             #print (tempSaldo.iloc[index2]['Saldo'] )    
         df.iloc[:][colName] =  tempSaldo   
         df.iloc[:][colName] = pd.to_numeric(df.iloc[:][colName])
+        """
     return df
 
 
@@ -153,32 +156,31 @@ def searchReplace(df, listIndex, Kategorie):
                         df.at[index2,Kategorie] = Begriff
                 else:
                     try:
-                        if Regex.search(df.ix[index2, index1]) != None:
-                            
+                        if Regex.search(df.iloc[index2, index1]) != None:
                             if Begriff == 'Gina':
-                                print('Reweeinkauf am:',df.iloc[index2][0],' fuer ',  df.iloc[index2][4], 'EUR' )
+                                print('Reweeinkauf am:',df.iloc[index2][0],' fuer ', df.iloc[index2][4], 'EUR')
                             elif df.at[index2,Kategorie] =='KEINE':
                                 df.at[index2,Kategorie] = Begriff
                             else:
-                                if df.at[index2,Kategorie] != Begriff:                                     
+                                if df.at[index2,Kategorie] != Begriff:
                                     changeList = changeList.append('Eintrag bereits geändert in',df.at[index2,Kategorie] , 'ersetzt durch ', Begriff, ' in Zeile ', index2)
                                     print ('Eintrag bereits geändert in',df.at[index2,Kategorie] , 'ersetzt durch ', Begriff, ' in Zeile ', index2)
                                     df.at[index2,Kategorie] = Begriff                            #print (df.loc[index2][Kategorie], index2 , index1, df.iloc[index2][index1])                      
                     except TypeError:
-                        # ('Kein Wert angegeben in Zeile ', index2 , index1)  # noch ändern  
-                        df.ix[index2,index1] = "Eintrag fehlt"
+                        # ('Kein Wert angegeben in Zeile ', index2 , index1)  # noch ändern 
+                        df.at[index2,Kategorie] = 'KEINE'
+                        print('Wert "%s" is None?'% df.iloc[index2,index1])
+                        #df.iloc[index2,index1] = "Eintrag fehlt"
         if len(changeList) > 0:
-            pickle.dump(changeList,open(os.path.join('Hinweisprotokoll_'+getTimeStamp()+'.p'), "wb"))  
+            pickle.dump(changeList,open(os.path.join('Hinweisprotokoll_'+getTimeStamp()+'.p'), "wb"))
             print ('Hinweise ausgeschrieben')
     return df
 
 
-def ResetRest(df, overwrite):  
-    
+def ResetRest(df, overwrite):
     if overwrite == True:
-        List = df.loc[df['Oberstruktur'] =='Rest'].index 
-        df.ix[List,6]='Sonstige' 
-    
+        List = df.loc[df['Oberstruktur'] == 'Rest'].index 
+        df.ix[List,6] = 'Sonstige' 
     return  df.loc[df['Oberstruktur'] == 'REST']   
 
 

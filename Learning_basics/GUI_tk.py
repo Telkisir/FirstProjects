@@ -16,6 +16,10 @@ from Pathnames import getDataPyth, dumpData, FindDuplicates
 from ReadBankData import UpdateBankData
 import pandas as pd
 
+# TODO check warum -24.95 GMX Prdoukt als double nicht erkannt
+# merge data (synchronize)
+# autmatik data format for bank data
+# Visualisierung
 def readInValue():
     #hier auch Gruppe neu setzen ne muss nicht da df gesetzt weird
     value =VFvalue.get()
@@ -30,6 +34,7 @@ def readInValue():
         #delID() Warum steht das hier?
         return df
 
+
 def savetoBase(value, datum, oName, desc, person):
     df = getDataPyth()
     rowmax = len(df)
@@ -37,16 +42,16 @@ def savetoBase(value, datum, oName, desc, person):
         valInd = rowmax +1
     else:
         valInd = float(VFID.get())
-        print ('Wert wird ersetzt')
+        print('Wert wird ersetzt')
     df.loc[valInd] = np.nan
     #tdate = datetime.datetime.strptime(datum,"%d.%m.%Y").date()
-    df.loc[valInd, df.columns[0]] = pd.to_datetime(datum, yearfirst = True, format='%d.%m.%Y').date()
+    df.loc[valInd, 'Buchung'] = pd.to_datetime(datum, yearfirst = True, format='%d.%m.%Y').date()
     df.loc[valInd, 'Oberstruktur'] = oName
     df.loc[valInd, 'Zweck'] = str(desc)
     df.loc[valInd, 'Betrag'] = float(value)*-1
-    df.loc[valInd, 'Zahlungsart'] = 'BAR'                
-    df.loc[valInd, df.columns[1]] = person     
-    print ('Eintrag eingetragen')
+    df.loc[valInd, 'Zahlungsart'] = 'BAR'
+    df.loc[valInd, 'Person'] = person
+    print('Eintrag eingetragen')
     dumpData(df)
     return df
 
@@ -72,6 +77,7 @@ def DAU(value, da, sDesc):
         #break            
     return OK
 
+
 def findIt():
     if checkID():
         valID = int(VFID.get()) 
@@ -81,7 +87,7 @@ def findIt():
         VFvalue.insert(0, df.loc[valID, 'Betrag'])
         VFdesc.insert(0,df.loc[valID, 'Zweck']) 
 
- 
+
 def checkID():
     try:    
         if float(VFID.get()).is_integer():
@@ -98,10 +104,12 @@ def checkID():
     except ValueError:
         print ('Eingabe bei ID nicht korrekt, bitte prüfen.')
         return False
-       
+
+
 def printIt():    
     print ('Value is: %s'%sGroup.get())
-    
+
+
 def addSome():
     # Reset var and delete all old options
     sGroup.set('')
@@ -113,6 +121,7 @@ def addSome():
     for choice in newchoice:
         dropGroup['menu'].add_command(label=choice, command=tk__._setit(sGroup, choice))
 
+
 def clearArrays():  
     VFvalue.delete(0, 'end')
     VFdate.delete(0,'end')
@@ -121,7 +130,7 @@ def clearArrays():
     VFdesc.delete(0,'end')
     VFgroup.delete(0,'end')    
     VFID.delete(0,'end')
-    
+
 
 def delID(): 
     if checkID():
@@ -130,8 +139,8 @@ def delID():
         clearArrays()
         dumpData(df)
         VFID.insert(0,valID)
-    
-    
+
+
 def replaceID(): 
     #TODO einträg ändern 
     count = 0
@@ -152,33 +161,36 @@ def replaceID():
     else:
         print ('Keine Eingaben vorhanden')
 
+
 def Bank():
     UpdateBankData(True)
+
 
 if __name__ == '__main__' :
     te = '24.7.2017'
     ro = tk__.Tk()
     df = getDataPyth()    
     #Layout
-    ro.geometry("500x350")
+    ro.geometry("570x350")
+    wStd = 120
     x1 = 5
-    x2 = 85
+    x2 = 100
     B = tk__.Button(ro, text ="Betrag einlesen", command = readInValue)
-    B.place(x=100,y=220)
+    B.place(x=150,y=220)
     #Save
     B2 = tk__.Button(ro, text ="Del Duplicates", command = FindDuplicates)
     B2.place(x=10,y=220)
     #Eintrag löschen
     Bfind = tk__.Button(ro, text ="Eintrag suchen", command = findIt)
-    Bfind.place(x=200,y=220)
+    Bfind.place(x=300,y=220)
     Bclear = tk__.Button(ro, text ="Felder löschen", command =clearArrays)
-    Bclear.place(x=250,y=300)
+    Bclear.place(x=260,y=300)
     Bdel = tk__.Button(ro, text ="Eintrag löschen", command =delID)
     Bdel.place(x=x1,y=300)
     Bchage = tk__.Button(ro, text ="Eintrag ändern", command =replaceID)
-    Bchage.place(x=x1+100,y=300)
+    Bchage.place(x=x1+130,y=300)
     B_Bank = tk__.Button(ro, text ="Bankdaten aktualisieren", command = Bank )
-    B_Bank.place(x=350 ,y=300) 
+    B_Bank.place(x=380 ,y=300) 
     LID = tk__.Label(ro, text='ID:')
     VFID = tk__.Entry(ro, bd = 5) #Value Field
     LID.place(x=x1, y= 250)
@@ -187,12 +199,12 @@ if __name__ == '__main__' :
     Lvalue = tk__.Label(ro, text='Betrag:')
     VFvalue = tk__.Entry(ro, bd = 5) #Value Field
     Lvalue.place(x=x1, y=40)
-    VFvalue.place(x=x2, y=40)
+    VFvalue.place(x=x2, y=40, width=wStd)
     #Datum
     L2 = tk__.Label(ro, text='Datum:')
     VFdate = tk__.Entry(ro, bd = 5) #Value Field
     L2.place(x =x1, y=60)
-    VFdate.place(x =x2, y=60)
+    VFdate.place(x =x2, y=60, width=wStd)
     #Verwendungszweck
     L3 = tk__.Label(ro, text='Gruppe:')
     L3.place(x =x1, y=85)
@@ -210,7 +222,7 @@ if __name__ == '__main__' :
     L4 = tk__.Label(ro, text='Beschreibung:' )
     VFdesc = tk__.Entry(ro, bd=5, width=50) #Value Field
     L4.place(x =x1, y=110)
-    VFdesc.place(x=x2, y=110)
+    VFdesc.place(x=x2, y=110, width=wStd +100)
     #Zahler
     L5 = tk__.Label(ro, text='Person:')
     L5.place(x=x1, y=180)
