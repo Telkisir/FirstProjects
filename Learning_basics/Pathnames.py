@@ -30,7 +30,8 @@ def getDataPyth():
                 localPlace = temp
     df = pd.read_pickle(os.path.join(path, 'TotalData_' +
                                      str(localPlace) + '.p'))
-    df = df.astype({'Betrag': np.float, 'Saldo': np.float})
+    df = df.astype({'Betrag': np.float,
+                    'Saldo': np.float})
     df.index = range(0, len(df))
     df = renColName(df)
     df.loc[df.Saldo.isnull(), 'Saldo'] = 0.0
@@ -59,7 +60,8 @@ def FindDuplicates():
     whitelist = ['Umbuchung  ', 'Miete Haendelstrasse 21 in  Kohlscheid  ',
        'Finanzierung A  ', 'Hochzeit  ',
        'Versicherungsnr. 072764358 Beitrag  Krankenversicherung  ',
-       'Aufladung bei geringem Guthaben fue  r Ihr Prepaid-Konto 4915776822342-9  673. BLAU.DE SAGT DANKE  ',]
+       'Aufladung bei geringem Guthaben fue  r Ihr Prepaid-Konto 4915776822342-9  673. BLAU.DE SAGT DANKE  ',
+       'Reitbeteiligung', 'C722630548']
     listVerwendung = duplies.Zweck.unique()
     for indVer in listVerwendung:
         if not(indVer in whitelist):
@@ -82,40 +84,46 @@ def FindDuplicates():
                           #else: Abweichung vermutlich kein Eingabefehler
                 else:
                     print('Für Betrag %f wurden beim Verwendungszweck %s mehr als zwei Dopplungen festgestellt' % (indVal, indVer))
-    df = FindDuplicateOberstruktur(df)
+    df = FindDuplicateOberstruktur(df, ['Zweck', 'Betrag', 'Saldo', 'Zahlungsart', 'Buchung', 'Person'])
+    df = FindDuplicateOberstruktur(df, ['Betrag', 'Buchung', 'Person', 'BText'])
     dumpData(df)
 
 
-def FindDuplicateOberstruktur(df):
-    #  lösche Dopplung aufgrund alter Datei und Regin Reihenfolge
-    a = df.drop(df.drop_duplicates(subset=['Zweck', 'Betrag', 'Saldo', 'BText',
-                                           'Zahlungsart', 'Buchung', 'Person'],
-                                            keep=False).index)
+def FindDuplicateOberstruktur(df, listCol):
+    #  lösche Dopplung aufgrund alter Datei und Begin Reihenfolge
+    df.drop_duplicates(inplace=True)
+    a = df.drop(df.drop_duplicates(subset=listCol, keep=False).index)
+    df.drop(a.loc[(a.Oberstruktur == 'Eintrag fehlt')].index, inplace=True)
+    a = df.drop(df.drop_duplicates(subset=listCol, keep=False).index)
     df.drop(a.loc[(a.Oberstruktur == 'REST')].index, inplace=True)
-    a = df.drop(df.drop_duplicates(subset=['Zweck', 'Betrag', 'Saldo', 'BText',
-                                           'Zahlungsart', 'Buchung', 'Person']
-                                            , keep=False).index)
+    a = df.drop(df.drop_duplicates(subset=listCol, keep=False).index)
     df.drop(a.loc[(a.Oberstruktur == 'Sonstige')].index, inplace=True)
-    a = df.drop(df.drop_duplicates(subset=['Zweck', 'Betrag', 'Saldo', 'BText',
-                                           'Zahlungsart', 'Buchung', 'Person'],
-                                            keep=False).index)
+    a = df.drop(df.drop_duplicates(subset=listCol, keep=False).index)
     df.drop(a.loc[(a.Oberstruktur == 'Essen')].index, inplace=True)
-    a = df.drop(df.drop_duplicates(subset=['Zweck', 'Betrag', 'Saldo', 'BText',
-                                           'Zahlungsart', 'Buchung', 'Person'],
-                                            keep=False).index)
+    a = df.drop(df.drop_duplicates(subset=listCol, keep=False).index)
     df.drop(a.loc[(a.Oberstruktur == 'Umbuchung')].index, inplace=True)
-    a = df.drop(df.drop_duplicates(subset=['Zweck', 'Betrag', 'Saldo', 'BText',
-                                           'Zahlungsart', 'Buchung', 'Person'],
-                                            keep=False).index)
+    a = df.drop(df.drop_duplicates(subset=listCol, keep=False).index)
     df.drop(a.loc[(a.Oberstruktur == 'Freizeit')].index, inplace=True)
-    a = df.drop(df.drop_duplicates(subset=['Zweck', 'Betrag', 'Saldo', 'BText',
-                                           'Zahlungsart', 'Buchung', 'Person'],
-                                            keep=False).index)
+    a = df.drop(df.drop_duplicates(subset=listCol, keep=False).index)
     df.drop(a.loc[(a.Oberstruktur == 'Arbeit')].index, inplace=True)
-    a = df.drop(df.drop_duplicates(subset=['Zweck', 'Betrag', 'Saldo', 'BText',
-                                           'Zahlungsart', 'Buchung', 'Person'],
-                                            keep=False).index)
-    df.index = range(0, len(df))
+    a = df.drop(df.drop_duplicates(subset=listCol, keep=False).index)
+    df.drop(a.loc[(a.Oberstruktur == 'Nebenkosten')].index, inplace=True)
+    a = df.drop(df.drop_duplicates(subset=listCol, keep=False).index)
+    df.drop(a.loc[(a.Oberstruktur == 'Telefon')].index, inplace=True)
+    df.reset_index(drop=True, inplace=True)
+    # do thesame for Zweck
+    a = df.drop(df.drop_duplicates(subset=['Oberstruktur', 'Betrag', 'Saldo',
+                                           'Zahlungsart', 'Buchung', 'Person'], keep=False).index)
+    df.drop(a.loc[(a.Zweck == 'Eintrag fehlt')].index, inplace=True)
+    # Bank hat Format geändert. Leerzeichen und Lastschrift(einzug)
+    # Problem nur bei Obstruktur == Telefon?
+    a = df.drop(df.drop_duplicates(subset=['Oberstruktur', 'Betrag', 'Saldo',
+                                           'Zahlungsart', 'Buchung', 'Person'], keep=False).index)
+    b = a.loc[a.Oberstruktur == 'Telefon']
+    c = b.drop(b.drop_duplicates(subset=['Oberstruktur', 'Betrag', 'Saldo',
+                                         'Zahlungsart', 'Buchung', 'Person']).index)
+    df = df.drop(c.index)
+    df.reset_index(drop=True, inplace=True)
     return df
 
 
